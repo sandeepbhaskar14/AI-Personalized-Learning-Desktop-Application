@@ -1,0 +1,6 @@
+PyQt5
+flask
+termcolor
+jwt
+flask_sqlalchemy
+pillow
