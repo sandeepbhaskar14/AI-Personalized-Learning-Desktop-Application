@@ -109,7 +109,15 @@ class UIFunctions(MainWindow) :
         self.ui.stackedWidget.setCurrentWidget(self.ui.settings_page)
         # self.ui.stackedWidget_2.setCurrentWidget(self.ui.account_page)
  
-                 
+    def setAboutPage(self):
+        self.ui.setting_pages.setCurrentWidget(self.ui.about_page)
+        
+    def setAccountPage(self):
+        self.ui.setting_pages.setCurrentWidget(self.ui.account_page)
+        
+    def setPreferencesPage(self):
+        self.ui.setting_pages.setCurrentWidget(self.ui.preference_page)
+    
     def close_win(self) :
         print(colored('Exiting ...', 'red'))
         self.close()
