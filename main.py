@@ -62,6 +62,7 @@ class MainWindow(QMainWindow) :
         self.ui.buttonAbout.clicked.connect(lambda: UIFunctions.setAboutPage(self))
         self.ui.acc_button.clicked.connect(lambda: UIFunctions.setAccountPage(self))
         self.ui.button_preferences.clicked.connect(lambda: UIFunctions.setPreferencesPage(self))
+        self.ui.button_logout.clicked.connect(lambda: self.invoke_logout())
         self.ui.login_button.clicked.connect(lambda: self.run_login())
         
         self.ui.button_save.clicked.connect(lambda: self.handle_user_preferences())
@@ -112,6 +113,7 @@ class MainWindow(QMainWindow) :
             self.ui.login_button.setStyleSheet(stylesheet)
             self.ui.login_button.setEnabled(False)
             self.ui.login_button.setToolTip(username)
+            self.ui.logged_in_label.setText('Logged In')
             self.ui.logged_in_label.setStyleSheet(stylesheet)
             
             self.ui.username_label.setText(f"Username: {username}")
@@ -157,6 +159,12 @@ class MainWindow(QMainWindow) :
         from handle_requests import get_user_preferences
         get_user_preferences(self)
         
+    def invoke_logout(self):
+        if self.ui.button_logout.text() == 'Log In':
+            self.run_login()
+        if self.ui.button_logout.text() == 'Log Out':
+            import logout
+            logout.LogOut(self)
         
     def send_user_prompt(self):
         from handle_requests import send_prompt

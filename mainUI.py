@@ -1359,14 +1359,8 @@ class Ui_MainWindow(object):
         font = QtGui.QFont()
         font.setFamily("Roboto")
         font.setPointSize(10)
-        font.setBold(False)
-        font.setItalic(True)
-        font.setWeight(50)
         self.logged_in_label.setFont(font)
-        self.logged_in_label.setStyleSheet("color:rgb(180, 180, 180);\n"
-"background:transparent;\n"
-"font:italic;\n"
-"color:rgb(0, 225, 109)")
+        self.logged_in_label.setStyleSheet("color: rgba(255, 0, 0, 200);")
         self.logged_in_label.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
         self.logged_in_label.setObjectName("logged_in_label")
         self.horizontalLayout_20.addWidget(self.logged_in_label)
@@ -1775,10 +1769,10 @@ class Ui_MainWindow(object):
         self.preferred_output.setItemText(3, _translate("MainWindow", "Flashcard"))
         self.button_save.setText(_translate("MainWindow", "Save"))
         self.account_label.setText(_translate("MainWindow", "Account"))
-        self.logged_in_label.setText(_translate("MainWindow", "Logged In"))
+        self.logged_in_label.setText(_translate("MainWindow", " Not Logged In"))
         self.username_label.setText(_translate("MainWindow", "Username: "))
         self.email_label.setText(_translate("MainWindow", "Email: "))
-        self.button_logout.setText(_translate("MainWindow", "Log out"))
+        self.button_logout.setText(_translate("MainWindow", "Log In"))
         self.account_label_2.setText(_translate("MainWindow", "About"))
         self.label_11.setText(_translate("MainWindow", "AI Personalized Learning App"))
         self.label_12.setText(_translate("MainWindow", "version: 1.0"))

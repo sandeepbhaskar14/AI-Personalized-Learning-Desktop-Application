@@ -33,7 +33,8 @@ class LoginWindow(QDialog):
         self.setWindowFlags(Qt.Tool | Qt.FramelessWindowHint)
 
         # CLOSE
-        self.ui.button_close.clicked.connect(lambda: sys.exit())
+        # self.ui.button_close.clicked.connect(lambda: sys.exit())
+        self.ui.button_close.clicked.connect(lambda: self.close())
         
         self.ui.signup_page_button.clicked.connect(lambda: self.setSignupPage())
         self.ui.login_page_button.clicked.connect(lambda: [self.setLoginPage(), self.ui.info_label.setText('')])

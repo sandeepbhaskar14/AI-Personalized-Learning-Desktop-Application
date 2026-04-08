@@ -2851,19 +2851,13 @@ background:transparent;</string>
                                     <font>
                                      <family>Roboto</family>
                                      <pointsize>10</pointsize>
-                                     <weight>50</weight>
-                                     <italic>true</italic>
-                                     <bold>false</bold>
                                     </font>
                                    </property>
                                    <property name="styleSheet">
-                                    <string notr="true">color:rgb(180, 180, 180);
-background:transparent;
-font:italic;
-color:rgb(0, 225, 109)</string>
+                                    <string notr="true">color: rgba(255, 0, 0, 200);</string>
                                    </property>
                                    <property name="text">
-                                    <string>Logged In</string>
+                                    <string> Not Logged In</string>
                                    </property>
                                    <property name="alignment">
                                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -3026,7 +3020,7 @@ QPushButton:hover{
 }</string>
                                       </property>
                                       <property name="text">
-                                       <string>Log out</string>
+                                       <string>Log In</string>
                                       </property>
                                      </widget>
                                     </item>
