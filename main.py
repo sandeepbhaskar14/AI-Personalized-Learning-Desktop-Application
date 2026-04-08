@@ -88,7 +88,7 @@ class MainWindow(QMainWindow) :
         
     def run_login(self):
         from login_window import LoginWindow
-        login = LoginWindow()
+        login = LoginWindow(self)
         # login.exec_()
         result = login.exec_()  # modal dialog
 
@@ -96,13 +96,31 @@ class MainWindow(QMainWindow) :
             self.ui.login_button.setText("Logged In")
             self.ui.login_button.setEnabled(False)
             
-    def after_verify_token(self, success):
-        if success:
+    def after_verify_token(self, response):
+        if response.get("status_code") == 200:
+            username = response.get("user")
+            email = response.get("email")
+            print(colored(f"Logged in user: {username}", 'green'))
+            
+            stylesheet = """
+                            font-family: 'Roboto';       /* font family */
+                            font-size: 10pt;            /* font size */
+                            font-style: italic;         /* italic text */
+                            color: green;                /* text color */
+                    """
             self.ui.login_button.setText("Logged In")
-            self.ui.login_button.setStyleSheet('color:rgb(0, 180, 0)')
+            self.ui.login_button.setStyleSheet(stylesheet)
             self.ui.login_button.setEnabled(False)
+            self.ui.login_button.setToolTip(username)
+            self.ui.logged_in_label.setStyleSheet(stylesheet)
+            
+            self.ui.username_label.setText(f"Username: {username}")
+            self.ui.email_label.setText(f"Email: {email}")
+            self.ui.button_logout.setText('Log Out')
+            
             self.update_user_preferences()
         else:
+            print(colored(response.get("message"), 'red'))
             self.run_login()
         
     def verify_token(self):

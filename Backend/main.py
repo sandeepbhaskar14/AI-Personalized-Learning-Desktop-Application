@@ -47,8 +47,12 @@ def verify_token_():
             data = jwt.decode(token, app.config["SECRET_KEY"], algorithms=["HS256"])
             print(colored(data, 'green'))
             user_id = data["user_id"]
+            username = data["username"]
+            email = data["email"]
             if user_id:
                 return jsonify({"message": "Token is valid!",
+                                "user": username,
+                                "email": email,
                                 "status_code": 200})
     except:
         return jsonify({"message": "Token is invalid!",

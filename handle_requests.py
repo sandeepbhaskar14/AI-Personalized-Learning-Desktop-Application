@@ -216,21 +216,9 @@ def handle_login_response(self, response, main_win):
         file.write(response['token'])
         file.close()
         subprocess.run(["icacls", "auth_token.x", "/deny", "Everyone:(R)"], check=True)
-        
-        
-        # main_win.ui.login_button.setText('Logged in')
-        # main_win.ui.login_button.setStyleSheet('''QPushButton{
-        #                                       color: rgba(255, 255, 255, 200);
-        #                                       background-color: rgb(48, 53, 65);
-                                            
-        #                                       border-radius:10px;
-        #                                   }''')
-        
-        get_user_preferences(main_win)
-        
-        
-        # update main ui
-        
+ 
+        print(colored('Verifying token!', 'magenta'))
+        MainWindow.verify_token(main_win)
         
         
     else:  # username doesn't exists
@@ -374,10 +362,7 @@ def verify_token_(self, token, callback):
     self.thread = WorkerThread(None, 'GET', 'verify_token', headers=headers)
 
     def handle_response(response):
-        if response['status_code'] == 200:
-            callback(True)
-        else:
-            callback(False)
+        callback(response)
 
     self.thread.data_fetched.connect(handle_response)
     self.thread.start()

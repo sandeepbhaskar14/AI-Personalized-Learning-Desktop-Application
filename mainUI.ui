@@ -2846,7 +2846,7 @@ background:transparent;</string>
                                   </widget>
                                  </item>
                                  <item>
-                                  <widget class="QLabel" name="label_9">
+                                  <widget class="QLabel" name="logged_in_label">
                                    <property name="font">
                                     <font>
                                      <family>Roboto</family>
@@ -2920,7 +2920,7 @@ color:rgb(0, 225, 109)</string>
                                    </property>
                                    <layout class="QVBoxLayout" name="verticalLayout_14">
                                     <item>
-                                     <widget class="QLabel" name="label_8">
+                                     <widget class="QLabel" name="username_label">
                                       <property name="font">
                                        <font>
                                         <family>Roboto</family>
@@ -2935,12 +2935,12 @@ color:rgb(0, 225, 109)</string>
 background:transparent;</string>
                                       </property>
                                       <property name="text">
-                                       <string>Username: sandeepbhaskar14</string>
+                                       <string>Username: </string>
                                       </property>
                                      </widget>
                                     </item>
                                     <item>
-                                     <widget class="QLabel" name="label_7">
+                                     <widget class="QLabel" name="email_label">
                                       <property name="font">
                                        <font>
                                         <family>Roboto</family>
@@ -2952,7 +2952,7 @@ background:transparent;</string>
 background:transparent;</string>
                                       </property>
                                       <property name="text">
-                                       <string>Email: san767bhaskar@gmail.com</string>
+                                       <string>Email: </string>
                                       </property>
                                      </widget>
                                     </item>

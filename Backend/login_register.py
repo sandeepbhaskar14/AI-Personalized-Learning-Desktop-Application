@@ -88,6 +88,7 @@ def login():
             {
                 "user_id": user.id,
                 "username": user.username,
+                "email": user.email,
                 "role": user.role,
                 "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=12)
             },

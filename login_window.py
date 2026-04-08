@@ -14,8 +14,6 @@ class LoginWindow(QDialog):
         self.ui = Ui_Dialog()
         self.ui.setupUi(self)
         
-        
-        
         # ==>> REMOVE TITLE BAR
         self.setWindowFlag(QtCore.Qt.FramelessWindowHint)
         self.setAttribute(QtCore.Qt.WA_TranslucentBackground)
