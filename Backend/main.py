@@ -36,6 +36,24 @@ def verify_token():
         return None, jsonify({"message": "Token is invalid!"}), 403
         
 
+@app.route("/verify_token", methods=["GET"])
+def verify_token_():
+    token = None
+    print(request.headers)
+    
+    try:
+        if "Authorization" in request.headers and len(request.headers["Authorization"].split()) == 2: # [bearer, token]
+            token = request.headers["Authorization"].split()[1]
+            data = jwt.decode(token, app.config["SECRET_KEY"], algorithms=["HS256"])
+            print(colored(data, 'green'))
+            user_id = data["user_id"]
+            if user_id:
+                return jsonify({"message": "Token is valid!",
+                                "status_code": 200})
+    except:
+        return jsonify({"message": "Token is invalid!",
+                        "status_code": 401})
+
 @app.route("/user/preferences", methods=["POST"])
 def save_preferences():
     user_id, error_response, status_code = verify_token()

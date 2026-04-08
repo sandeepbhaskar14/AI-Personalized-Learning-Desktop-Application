@@ -1262,7 +1262,7 @@ p, li { white-space: pre-wrap; }
                             </property>
                             <layout class="QHBoxLayout" name="horizontalLayout_17">
                              <item>
-                              <widget class="QPushButton" name="pushButton">
+                              <widget class="QPushButton" name="login_button">
                                <property name="maximumSize">
                                 <size>
                                  <width>16777215</width>

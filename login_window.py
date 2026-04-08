@@ -7,11 +7,14 @@ import io
 
 class LoginWindow(QDialog):
     def __init__(self, main_win=None):
-        super().__init__(main_win)
+        super().__init__()
+        self.main_window = main_win
 
         from dlogin_page import Ui_Dialog
         self.ui = Ui_Dialog()
         self.ui.setupUi(self)
+        
+        
         
         # ==>> REMOVE TITLE BAR
         self.setWindowFlag(QtCore.Qt.FramelessWindowHint)
@@ -41,7 +44,7 @@ class LoginWindow(QDialog):
         self.ui.signup_button.clicked.connect(lambda: signup(self))
         
         # login button --handle_request
-        self.ui.login_button.clicked.connect(lambda: login(self, main_win))
+        self.ui.login_button.clicked.connect(lambda: login(self, self.main_window))
     
     def setSignupPage(self):
         self.ui.stackedWidget.setCurrentWidget(self.ui.signup_page)

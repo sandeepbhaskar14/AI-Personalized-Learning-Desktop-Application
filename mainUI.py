@@ -583,13 +583,13 @@ class Ui_MainWindow(object):
         self.frame_24.setObjectName("frame_24")
         self.horizontalLayout_17 = QtWidgets.QHBoxLayout(self.frame_24)
         self.horizontalLayout_17.setObjectName("horizontalLayout_17")
-        self.pushButton = QtWidgets.QPushButton(self.frame_24)
-        self.pushButton.setMaximumSize(QtCore.QSize(16777215, 30))
+        self.login_button = QtWidgets.QPushButton(self.frame_24)
+        self.login_button.setMaximumSize(QtCore.QSize(16777215, 30))
         font = QtGui.QFont()
         font.setFamily("Roboto")
-        self.pushButton.setFont(font)
-        self.pushButton.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.pushButton.setStyleSheet("QPushButton{\n"
+        self.login_button.setFont(font)
+        self.login_button.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.login_button.setStyleSheet("QPushButton{\n"
 "    color: rgba(255, 255, 255, 200);\n"
 "    background-color: rgb(48, 53, 65);\n"
 "    \n"
@@ -599,8 +599,8 @@ class Ui_MainWindow(object):
 "    color:rgb(85, 170, 255);\n"
 "    background-color:rgb(52, 57, 70)\n"
 "}")
-        self.pushButton.setObjectName("pushButton")
-        self.horizontalLayout_17.addWidget(self.pushButton)
+        self.login_button.setObjectName("login_button")
+        self.horizontalLayout_17.addWidget(self.login_button)
         self.horizontalLayout_16.addWidget(self.frame_24)
         self.verticalLayout_11.addWidget(self.frame_21)
         self.frame_22 = QtWidgets.QFrame(self.frame_10)
@@ -1741,8 +1741,8 @@ class Ui_MainWindow(object):
 "</style></head><body style=\" font-family:\'Roboto\'; font-size:10pt; font-weight:400; font-style:normal;\">\n"
 "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:\'MS Shell Dlg 2\'; font-size:7.8pt;\"><br /></p></body></html>"))
         self.text_prompt.setPlaceholderText(_translate("MainWindow", "Ask Anything"))
-        self.pushButton.setToolTip(_translate("MainWindow", "Not logged in!"))
-        self.pushButton.setText(_translate("MainWindow", "Log In"))
+        self.login_button.setToolTip(_translate("MainWindow", "Not logged in!"))
+        self.login_button.setText(_translate("MainWindow", "Log In"))
         self.label_32.setText(_translate("MainWindow", "Settings"))
         self.acc_button.setText(_translate("MainWindow", "Account"))
         self.buttonUI.setText(_translate("MainWindow", "User Interface"))

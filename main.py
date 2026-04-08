@@ -51,7 +51,8 @@ class MainWindow(QMainWindow) :
         self.ui.status_bar.mouseMoveEvent = MoveWindow
 
         # ==>> UI functions and removing title bar
-        UIFunctions.uiDefinitions(self)       
+        UIFunctions.uiDefinitions(self)   
+        from login_window import LoginWindow    
 
 
         # ==>> Page toggle and Strips color function calling
@@ -61,6 +62,7 @@ class MainWindow(QMainWindow) :
         self.ui.buttonAbout.clicked.connect(lambda: UIFunctions.setAboutPage(self))
         self.ui.acc_button.clicked.connect(lambda: UIFunctions.setAccountPage(self))
         self.ui.button_preferences.clicked.connect(lambda: UIFunctions.setPreferencesPage(self))
+        self.ui.login_button.clicked.connect(lambda: self.run_login())
         
         self.ui.button_save.clicked.connect(lambda: self.handle_user_preferences())
         self.ui.searchButton.clicked.connect(lambda: self.send_user_prompt())
@@ -83,6 +85,47 @@ class MainWindow(QMainWindow) :
         
     def mousePressEvent(self, event) :
         self.dragpos = event.globalPos()
+        
+    def run_login(self):
+        from login_window import LoginWindow
+        login = LoginWindow()
+        # login.exec_()
+        result = login.exec_()  # modal dialog
+
+        if result == QDialog.Accepted:
+            self.ui.login_button.setText("Logged In")
+            self.ui.login_button.setEnabled(False)
+            
+    def after_verify_token(self, success):
+        if success:
+            self.ui.login_button.setText("Logged In")
+            self.ui.login_button.setStyleSheet('color:rgb(0, 180, 0)')
+            self.ui.login_button.setEnabled(False)
+            self.update_user_preferences()
+        else:
+            self.run_login()
+        
+    def verify_token(self):
+        subprocess.run(
+            ["icacls", "auth_token.x", "/remove:d", "Everyone"],
+            check=True
+        )
+        with open("auth_token.x", "r") as token_file:
+            token = token_file.read()
+            token_file.close()
+            
+        if token:
+            from handle_requests import verify_token_
+
+            # call async function with callback
+            verify_token_(self, token, self.after_verify_token)
+        else:
+            self.run_login()
+
+        subprocess.run(
+            ["icacls", "auth_token.x", "/deny", "Everyone:(R)"],
+            check=True
+        )
 
     def get_threads(self) :
         total_threads = threading.activeCount()
@@ -101,38 +144,17 @@ class MainWindow(QMainWindow) :
         from handle_requests import send_prompt
         send_prompt(self)
 
-    
-def run_login(main_window, forced=None):
-    # importing Login UI
-    from login_window import LoginWindow, BlurOverlay
-    subprocess.run(
-        ["icacls", "auth_token.x", "/remove:d", "Everyone"],
-        check=True
-    )
-
-    with open("auth_token.x", "r") as token_file:
-        token = token_file.read()
-        token_file.close()
-
-    if not token or forced:
-        login = LoginWindow(main_window)
-        login.exec_()
-
-    subprocess.run(
-        ["icacls", "auth_token.x", "/deny", "Everyone:(R)"],
-        check=True
-    )
-
 
 def main():
     app = QApplication(sys.argv)
     main_window = MainWindow()
     main_window.show()
 
-    run_login(main_window)
+    # main_window.run_login()
+    MainWindow.verify_token(main_window)
 
     # ==>> Update User settings when reopen application 
-    main_window.update_user_preferences()
+    # main_window.update_user_preferences()
     
     sys.exit(app.exec_())
 

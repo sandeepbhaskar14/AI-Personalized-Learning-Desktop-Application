@@ -11,8 +11,6 @@ from termcolor import colored
 # from show_message import messageWindow
 
 
-LOGGED_IN = False
-
 # worker thread to acheive parallelism and avoid GUI frezzing
 class WorkerThread(QThread): 
     # esatablishes a connection between secondary thread and main thread
@@ -43,6 +41,22 @@ class WorkerThread(QThread):
                 print("Server responded with:", response.json())
             except requests.exceptions.ConnectionError:
                 print(colored('Failed to establish a new connection: [WinError 10061]', 'red'))
+         
+        elif self.method == 'GET' and self.route == 'verify_token':
+            try:
+                response = requests.get('http://localhost:5000/verify_token', headers=self.headers)
+
+                print("Status Code:", response.status_code)
+                print("Raw Response:", response.text)  # 👈 IMPORTANT
+
+                data = response.json()  # this is failing
+                self.data_fetched.emit(data)
+
+            except requests.exceptions.ConnectionError:
+                print("Connection failed")
+
+            except ValueError:  # catches JSON decode error
+                print("Invalid JSON received")
          
          
         elif self.method == 'POST' and self.route == 'preferences':
@@ -191,7 +205,6 @@ def login_update_ui(self):
 
 @pyqtSlot(dict)
 def handle_login_response(self, response, main_win):
-    global LOGGED_IN
     if 'token' in response:   # user logged in
         uname = self.ui.uid_lineEdit_2.text()
         self.ui.uid_lineEdit_2.setText('')
@@ -204,9 +217,17 @@ def handle_login_response(self, response, main_win):
         file.close()
         subprocess.run(["icacls", "auth_token.x", "/deny", "Everyone:(R)"], check=True)
         
+        
+        # main_win.ui.login_button.setText('Logged in')
+        # main_win.ui.login_button.setStyleSheet('''QPushButton{
+        #                                       color: rgba(255, 255, 255, 200);
+        #                                       background-color: rgb(48, 53, 65);
+                                            
+        #                                       border-radius:10px;
+        #                                   }''')
+        
         get_user_preferences(main_win)
         
-        LOGGED_IN = True
         
         # update main ui
         
@@ -327,6 +348,7 @@ def get_preference_response(self, response):
         handle_token_expired(self)
      
 def get_user_preferences(self):
+    print(colored(type(self), 'cyan'))
     subprocess.run(["icacls", "auth_token.x", "/remove:d", "Everyone"], check=True)
     file = open('auth_token.x', 'r', encoding='utf-8')
     self.jwt_token = file.read()
@@ -341,6 +363,23 @@ def get_user_preferences(self):
     
     self.thread = WorkerThread(None, 'GET', 'preferences', headers=headers)
     self.thread.data_fetched.connect(lambda response: get_preference_response(self, response))
+    self.thread.start()
+    
+def verify_token_(self, token, callback):
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+
+    self.thread = WorkerThread(None, 'GET', 'verify_token', headers=headers)
+
+    def handle_response(response):
+        if response['status_code'] == 200:
+            callback(True)
+        else:
+            callback(False)
+
+    self.thread.data_fetched.connect(handle_response)
     self.thread.start()
     
 
