@@ -1,87 +1,83 @@
+# routes/process_prompts.py
+
 import time
-from models import Result, Prompt
-from main import *
+import datetime
+from flask import request, jsonify
+# from flask_jwt_extended import jwt_required, get_jwt_identity
 
-def generate_response(text, task, difficulty, style):
-    if task == "summary":
-        return f"[SUMMARY - {difficulty.upper()}]\n{text[:200]}..."
+from models import Prompt, UserPreferences
+from main import app, db, verify_token
 
-    if task == "quiz":
-        return f"[QUIZ]\n1. What is {text.split()[0]}?\nA) ..."
+import uuid
 
-    if task == "flashcards":
-        return f"[FLASHCARDS]\nQ: {text}\nA: Explanation"
+# Import AI service
+from text_generate import stream_ai_response
 
-    if task == "explain":
-        return f"[EXPLANATION - {style.upper()}]\n{text}"
-
-    return "Task not supported"
-
-@app.route("/prompt", methods=["POST"])
-def handle_prompt():
-    user_id, error_response, status_code = verify_token()
+@app.route("/prompt/stream", methods=["POST"])
+def stream_prompt():
+    if request.headers: # user logged in
+        user_id, error_response, status_code = verify_token()
+        
     data = request.json
 
     prompt_text = data.get("prompt_text")
     prompt_type = data.get("prompt_type")
+    chat_id = data.get("chat_id")
 
     if not prompt_text or not prompt_type:
-        return jsonify({"error": "Invalid input", "status_code": 400})
+        return jsonify({"error": "Invalid input"}), 400
 
-    # 1. Create prompt with PENDING status
-    prompt = Prompt(
-        user_id=user_id,
-        prompt_text=prompt_text,
-        prompt_type=prompt_type,
-        status="processing",
-        created_at=datetime.datetime.utcnow()
-    )
-    db.session.add(prompt)
-    db.session.commit()
+    if not chat_id:
+        chat_id = str(uuid.uuid4())
+        
+    # DEFAULT VALUES (for guest)
+    difficulty = "medium"
+    learning_style = "text"
 
-    # 2. Start timing
-    start_time = time.time()
+    # ===============================
+    # LOGGED-IN USER FLOW
+    # ===============================
+    if user_id:
+        # Create prompt
+        prompt = Prompt(
+            user_id=user_id,
+            chat_id=chat_id,
+            prompt_text=prompt_text,
+            prompt_type=prompt_type,
+            status="processing",
+            created_at=datetime.datetime.utcnow()
+        )
+        db.session.add(prompt)
+        db.session.commit()
 
-    try:
-        # 3. Fetch preferences
         prefs = UserPreferences.query.filter_by(user_id=user_id).first()
+        if prefs:
+            difficulty = prefs.difficulty_level
+            learning_style = prefs.learning_style
+        else:
+            return jsonify({"error": "User preferences not set"}), 400
+        
+    # ===============================
+    # GUEST USER FLOW
+    # ===============================
+    else:
+        prompt = None  # No DB storage
 
-        # 4. Generate response (rule-based for now)
-        result_text = generate_response(
-            prompt_text,
-            prompt_type,
-            prefs.difficulty_level,
-            prefs.learning_style
-        )
+    # ===============================
+    # STREAM RESPONSE (COMMON)
+    # ===============================
 
-        processing_time_ms = int((time.time() - start_time) * 1000)
+    # STREAM RESPONSE
+    return stream_ai_response(
+        prompt,
+        chat_id,
+        prompt_text,
+        prompt_type,
+        difficulty,
+        learning_style
+    )
+    # except Exception as e:
+    #     prompt.status = "failed"
+    #     db.session.commit()
 
-        # 5. Store response
-        response = Result(
-            prompt_id=prompt.id,
-            result_text=result_text,
-            confidence_score=0.75,              # temp heuristic
-            processing_time_ms=processing_time_ms,
-            model_used="rule_based_v1"
-        )
-
-        # 6. Update prompt status
-        prompt.status = "completed"
-
-        db.session.add(response)
-        db.session.commit()
-
-        return jsonify({
-            "prompt_id": prompt.id,
-            "status": prompt.status,
-            "output": result_text,
-            "confidence": response.confidence_score,
-            "time_ms": processing_time_ms,
-            "status_code": 200
-        })
-
-    except Exception as e:
-        prompt.status = "failed"
-        db.session.commit()
-
-        return jsonify({"error": "Processing failed", "status_code": 500})
+    #     return jsonify({"error": str(e), "status_code": 500})

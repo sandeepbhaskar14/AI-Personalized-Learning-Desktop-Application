@@ -55,10 +55,12 @@ class Prompt(db.Model):
         nullable=False
     )
 
+    chat_id = db.Column(db.String(50), index=True)  # index added
+
     prompt_text = db.Column(db.Text, nullable=False)
 
     prompt_type = db.Column(
-        db.Enum("search", "summary", "mcqs", "flashcard", name="prompt_types"),
+        db.Enum("search", "summary", "quiz", "flashcards", "explain", name="prompt_types"),
         default="search"
     )
 
@@ -69,9 +71,8 @@ class Prompt(db.Model):
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    # Relationships
-    result = db.relationship(
-        "Result",
+    response = db.relationship(
+        "Response",
         backref="prompt",
         uselist=False,
         cascade="all, delete-orphan"
@@ -81,8 +82,8 @@ class Prompt(db.Model):
         return f"<Prompt {self.id}>"
     
     
-class Result(db.Model):
-    __tablename__ = "results"
+class Response(db.Model):
+    __tablename__ = "responses"  # FIXED
 
     id = db.Column(db.Integer, primary_key=True)
 
@@ -102,7 +103,7 @@ class Result(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     def __repr__(self):
-        return f"<Result prompt_id={self.prompt_id}>"
+        return f"<Response prompt_id={self.prompt_id}>"
 
 
 class PromptHistory(db.Model):
@@ -184,4 +185,3 @@ class UserPreferences(db.Model):
     updated_at = db.Column(db.DateTime, onupdate=db.func.now())
 
     user = db.relationship("User", backref="preferences", uselist=False)
-

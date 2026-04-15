@@ -7,6 +7,8 @@ import re
 import requests
 from termcolor import colored
 
+import uuid
+
 # importing message window
 # from show_message import messageWindow
 
@@ -88,15 +90,23 @@ class WorkerThread(QThread):
         #     except requests.exceptions.RequestException as e:
         #         print(colored('Connection Error: Server not reachable', 'red'))
                 
-        elif self.method == 'POST' and self.route == 'prompt':
+        elif self.method == 'POST' and self.route == '/prompt/stream':
             try:
-                response = requests.post('http://localhost:5000/prompt', json=self.data, headers=self.headers)
-                self.data_fetched.emit(response.json())
-                # print("Server responded with:", response.json())
+                response = requests.post(
+                    'http://localhost:5000/prompt/stream',
+                    json=self.data,
+                    headers=self.headers,
+                    stream=True   # IMPORTANT
+                )
+
+                for chunk in response.iter_content(chunk_size=1, decode_unicode=True):
+                    if chunk:
+                        self.products_data_fetched.emit(chunk)  # 🔥 stream token
+
             except requests.exceptions.RequestException as e:
                 print(colored('Connection Error: Server not reachable', 'red'))
-                
-                
+                        
+                        
 '''          
 def get_token_verification(self, response):  
     if response['status_code'] == 200:
@@ -368,11 +378,18 @@ def verify_token_(self, token, callback):
     self.thread.start()
     
 
-def get_prompt_response(self, response):
-    if response['status_code'] == 200:
-        print(colored(response, 'green'))
+def get_prompt_stream(self, chunk):
+    if not hasattr(self, "stream_output"):
+        self.stream_output = ""
+
+    print(colored(chunk, 'green'), end='')
+    
+    
 
 def send_prompt(self):
+    self.stream_output = ""  # reset buffer
+    # self.ui.output_box.setText("")
+    
     payload = {
     "prompt_text": self.ui.text_prompt.toPlainText(),
     "prompt_type": self.ui.preferred_output.currentText().lower() #task type
@@ -384,12 +401,20 @@ def send_prompt(self):
     file.close()
     subprocess.run(["icacls", "auth_token.x", "/deny", "Everyone:(R)"], check=True)
     
-    headers = {
-        "Authorization": f"Bearer {self.jwt_token}"
-    }
+    # if user is logged in
+    if self.jwt_token:
+        headers = {
+            "Authorization": f"Bearer {self.jwt_token}"
+        }
     
-    self.thread = WorkerThread(payload, 'POST', 'prompt', headers=headers)
-    self.thread.data_fetched.connect(lambda response: get_prompt_response(self, response))
+    # send prompt in guest mode
+    else:
+        self.session_id = str(uuid.uuid4())
+        payload["session_id"] = self.session_id
+        headers = None
+    
+    self.thread = WorkerThread(payload, 'POST', '/prompt/stream', headers=headers)
+    self.thread.products_data_fetched.connect(lambda chunk: get_prompt_stream(self, chunk))
     self.thread.start()
 
 

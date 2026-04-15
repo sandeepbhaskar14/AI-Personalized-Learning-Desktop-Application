@@ -35,6 +35,9 @@ class MainWindow(QMainWindow) :
         self.ui.addButton.setTextEdit(self.ui.text_prompt)
         self.ui.addButton.setAnchor("bottom-left")
         
+        # update preferences onle when user is logged in
+        self.ui.button_save.setEnabled(False)
+        
         def MoveWindow(event) :
             
             # ==>> Restore before move
@@ -119,6 +122,7 @@ class MainWindow(QMainWindow) :
             self.ui.username_label.setText(f"Username: {username}")
             self.ui.email_label.setText(f"Email: {email}")
             self.ui.button_logout.setText('Log Out')
+            self.ui.button_save.setEnabled(True)
             
             self.update_user_preferences()
         else:

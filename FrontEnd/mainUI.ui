@@ -3406,54 +3406,222 @@ QPushButton:hover{
                    <property name="frameShadow">
                     <enum>QFrame::Raised</enum>
                    </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QFrame" name="frame_2">
-                   <property name="maximumSize">
-                    <size>
-                     <width>16777215</width>
-                     <height>200</height>
-                    </size>
-                   </property>
-                   <property name="frameShape">
-                    <enum>QFrame::StyledPanel</enum>
-                   </property>
-                   <property name="frameShadow">
-                    <enum>QFrame::Raised</enum>
-                   </property>
-                   <widget class="StickyButton" name="addButton_2">
-                    <property name="geometry">
-                     <rect>
-                      <x>292</x>
-                      <y>70</y>
-                      <width>51</width>
-                      <height>45</height>
-                     </rect>
+                   <layout class="QHBoxLayout" name="horizontalLayout_33">
+                    <property name="spacing">
+                     <number>0</number>
                     </property>
-                    <property name="minimumSize">
-                     <size>
-                      <width>0</width>
-                      <height>45</height>
-                     </size>
+                    <property name="leftMargin">
+                     <number>0</number>
                     </property>
-                    <property name="maximumSize">
-                     <size>
-                      <width>160</width>
-                      <height>16777215</height>
-                     </size>
+                    <property name="topMargin">
+                     <number>0</number>
                     </property>
-                    <property name="font">
-                     <font>
-                      <family>Noto Sans Medium</family>
-                      <pointsize>10</pointsize>
-                     </font>
+                    <property name="rightMargin">
+                     <number>0</number>
                     </property>
-                    <property name="cursor">
-                     <cursorShape>PointingHandCursor</cursorShape>
+                    <property name="bottomMargin">
+                     <number>0</number>
                     </property>
-                    <property name="styleSheet">
-                     <string notr="true">QPushButton{
+                    <item>
+                     <widget class="QFrame" name="frame_46">
+                      <property name="minimumSize">
+                       <size>
+                        <width>280</width>
+                        <height>0</height>
+                       </size>
+                      </property>
+                      <property name="maximumSize">
+                       <size>
+                        <width>400</width>
+                        <height>16777215</height>
+                       </size>
+                      </property>
+                      <property name="frameShape">
+                       <enum>QFrame::StyledPanel</enum>
+                      </property>
+                      <property name="frameShadow">
+                       <enum>QFrame::Raised</enum>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QFrame" name="frame_45">
+                      <property name="minimumSize">
+                       <size>
+                        <width>700</width>
+                        <height>0</height>
+                       </size>
+                      </property>
+                      <property name="maximumSize">
+                       <size>
+                        <width>1100</width>
+                        <height>16777215</height>
+                       </size>
+                      </property>
+                      <property name="frameShape">
+                       <enum>QFrame::StyledPanel</enum>
+                      </property>
+                      <property name="frameShadow">
+                       <enum>QFrame::Raised</enum>
+                      </property>
+                      <layout class="QVBoxLayout" name="verticalLayout_18">
+                       <property name="spacing">
+                        <number>0</number>
+                       </property>
+                       <property name="leftMargin">
+                        <number>0</number>
+                       </property>
+                       <property name="topMargin">
+                        <number>0</number>
+                       </property>
+                       <property name="rightMargin">
+                        <number>0</number>
+                       </property>
+                       <property name="bottomMargin">
+                        <number>0</number>
+                       </property>
+                       <item>
+                        <widget class="QFrame" name="frame_58">
+                         <property name="maximumSize">
+                          <size>
+                           <width>16777215</width>
+                           <height>16777215</height>
+                          </size>
+                         </property>
+                         <property name="styleSheet">
+                          <string notr="true">background-color: rgb(50, 56, 68);</string>
+                         </property>
+                         <property name="frameShape">
+                          <enum>QFrame::StyledPanel</enum>
+                         </property>
+                         <property name="frameShadow">
+                          <enum>QFrame::Raised</enum>
+                         </property>
+                         <layout class="QVBoxLayout" name="verticalLayout_19">
+                          <property name="leftMargin">
+                           <number>5</number>
+                          </property>
+                          <property name="topMargin">
+                           <number>20</number>
+                          </property>
+                          <property name="rightMargin">
+                           <number>5</number>
+                          </property>
+                          <property name="bottomMargin">
+                           <number>10</number>
+                          </property>
+                          <item>
+                           <widget class="QScrollArea" name="scrollArea">
+                            <property name="widgetResizable">
+                             <bool>true</bool>
+                            </property>
+                            <widget class="QWidget" name="scrollAreaWidgetContents">
+                             <property name="geometry">
+                              <rect>
+                               <x>0</x>
+                               <y>0</y>
+                               <width>735</width>
+                               <height>539</height>
+                              </rect>
+                             </property>
+                            </widget>
+                           </widget>
+                          </item>
+                         </layout>
+                        </widget>
+                       </item>
+                       <item>
+                        <widget class="QFrame" name="frame_2">
+                         <property name="minimumSize">
+                          <size>
+                           <width>0</width>
+                           <height>150</height>
+                          </size>
+                         </property>
+                         <property name="maximumSize">
+                          <size>
+                           <width>16777215</width>
+                           <height>150</height>
+                          </size>
+                         </property>
+                         <property name="frameShape">
+                          <enum>QFrame::StyledPanel</enum>
+                         </property>
+                         <property name="frameShadow">
+                          <enum>QFrame::Raised</enum>
+                         </property>
+                         <layout class="QHBoxLayout" name="horizontalLayout_34">
+                          <property name="spacing">
+                           <number>0</number>
+                          </property>
+                          <property name="leftMargin">
+                           <number>0</number>
+                          </property>
+                          <property name="topMargin">
+                           <number>0</number>
+                          </property>
+                          <property name="rightMargin">
+                           <number>0</number>
+                          </property>
+                          <property name="bottomMargin">
+                           <number>0</number>
+                          </property>
+                          <item>
+                           <widget class="QFrame" name="frame_59">
+                            <property name="frameShape">
+                             <enum>QFrame::StyledPanel</enum>
+                            </property>
+                            <property name="frameShadow">
+                             <enum>QFrame::Raised</enum>
+                            </property>
+                           </widget>
+                          </item>
+                          <item>
+                           <widget class="QFrame" name="frame_60">
+                            <property name="minimumSize">
+                             <size>
+                              <width>700</width>
+                              <height>0</height>
+                             </size>
+                            </property>
+                            <property name="frameShape">
+                             <enum>QFrame::StyledPanel</enum>
+                            </property>
+                            <property name="frameShadow">
+                             <enum>QFrame::Raised</enum>
+                            </property>
+                            <widget class="StickyButton" name="addButton_2">
+                             <property name="geometry">
+                              <rect>
+                               <x>10</x>
+                               <y>50</y>
+                               <width>51</width>
+                               <height>45</height>
+                              </rect>
+                             </property>
+                             <property name="minimumSize">
+                              <size>
+                               <width>0</width>
+                               <height>45</height>
+                              </size>
+                             </property>
+                             <property name="maximumSize">
+                              <size>
+                               <width>160</width>
+                               <height>16777215</height>
+                              </size>
+                             </property>
+                             <property name="font">
+                              <font>
+                               <family>Noto Sans Medium</family>
+                               <pointsize>10</pointsize>
+                              </font>
+                             </property>
+                             <property name="cursor">
+                              <cursorShape>PointingHandCursor</cursorShape>
+                             </property>
+                             <property name="styleSheet">
+                              <string notr="true">QPushButton{
 	background:none;
 	border:none;
 	color:rgba(255, 255, 255, 180);
@@ -3463,134 +3631,71 @@ QPushButton:hover{
 QPushButton:hover{
 	background-color: rgb(45, 48, 58);
 }</string>
-                    </property>
-                    <property name="text">
-                     <string/>
-                    </property>
-                    <property name="icon">
-                     <iconset>
-                      <normaloff>Reqs/add_icon.png</normaloff>Reqs/add_icon.png</iconset>
-                    </property>
-                    <property name="iconSize">
-                     <size>
-                      <width>22</width>
-                      <height>22</height>
-                     </size>
-                    </property>
-                   </widget>
-                   <widget class="StickyButton" name="searchButton_2">
-                    <property name="geometry">
-                     <rect>
-                      <x>922</x>
-                      <y>71</y>
-                      <width>45</width>
-                      <height>45</height>
-                     </rect>
-                    </property>
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="minimumSize">
-                     <size>
-                      <width>45</width>
-                      <height>45</height>
-                     </size>
-                    </property>
-                    <property name="maximumSize">
-                     <size>
-                      <width>45</width>
-                      <height>45</height>
-                     </size>
-                    </property>
-                    <property name="font">
-                     <font>
-                      <family>Noto Sans Medium</family>
-                      <pointsize>10</pointsize>
-                     </font>
-                    </property>
-                    <property name="cursor">
-                     <cursorShape>PointingHandCursor</cursorShape>
-                    </property>
-                    <property name="styleSheet">
-                     <string notr="true">QPushButton{
-	background:none;
-	border:none;
-	color:rgba(255, 255, 255, 180);
-	background-color: rgb(41, 44, 53);
-	border-radius: 21px ;
-	margin-top:3px;
-}
-QPushButton:hover{
-	background-color: rgb(45, 48, 58);
-}</string>
-                    </property>
-                    <property name="text">
-                     <string/>
-                    </property>
-                    <property name="icon">
-                     <iconset>
-                      <normaloff>Reqs/search.png</normaloff>Reqs/search.png</iconset>
-                    </property>
-                    <property name="iconSize">
-                     <size>
-                      <width>27</width>
-                      <height>27</height>
-                     </size>
-                    </property>
-                   </widget>
-                   <widget class="AutoGrowTextEdit" name="textEdit_2">
-                    <property name="enabled">
-                     <bool>true</bool>
-                    </property>
-                    <property name="geometry">
-                     <rect>
-                      <x>290</x>
-                      <y>70</y>
-                      <width>681</width>
-                      <height>50</height>
-                     </rect>
-                    </property>
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="minimumSize">
-                     <size>
-                      <width>0</width>
-                      <height>50</height>
-                     </size>
-                    </property>
-                    <property name="maximumSize">
-                     <size>
-                      <width>16777215</width>
-                      <height>50</height>
-                     </size>
-                    </property>
-                    <property name="sizeIncrement">
-                     <size>
-                      <width>0</width>
-                      <height>0</height>
-                     </size>
-                    </property>
-                    <property name="baseSize">
-                     <size>
-                      <width>0</width>
-                      <height>0</height>
-                     </size>
-                    </property>
-                    <property name="font">
-                     <font>
-                      <family>Roboto</family>
-                      <pointsize>10</pointsize>
-                     </font>
-                    </property>
-                    <property name="styleSheet">
-                     <string notr="true">QTextEdit{
+                             </property>
+                             <property name="text">
+                              <string/>
+                             </property>
+                             <property name="icon">
+                              <iconset>
+                               <normaloff>Reqs/add_icon.png</normaloff>Reqs/add_icon.png</iconset>
+                             </property>
+                             <property name="iconSize">
+                              <size>
+                               <width>22</width>
+                               <height>22</height>
+                              </size>
+                             </property>
+                            </widget>
+                            <widget class="AutoGrowTextEdit" name="textEdit_2">
+                             <property name="enabled">
+                              <bool>true</bool>
+                             </property>
+                             <property name="geometry">
+                              <rect>
+                               <x>10</x>
+                               <y>50</y>
+                               <width>681</width>
+                               <height>50</height>
+                              </rect>
+                             </property>
+                             <property name="sizePolicy">
+                              <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                               <horstretch>0</horstretch>
+                               <verstretch>0</verstretch>
+                              </sizepolicy>
+                             </property>
+                             <property name="minimumSize">
+                              <size>
+                               <width>0</width>
+                               <height>50</height>
+                              </size>
+                             </property>
+                             <property name="maximumSize">
+                              <size>
+                               <width>16777215</width>
+                               <height>50</height>
+                              </size>
+                             </property>
+                             <property name="sizeIncrement">
+                              <size>
+                               <width>0</width>
+                               <height>0</height>
+                              </size>
+                             </property>
+                             <property name="baseSize">
+                              <size>
+                               <width>0</width>
+                               <height>0</height>
+                              </size>
+                             </property>
+                             <property name="font">
+                              <font>
+                               <family>Roboto</family>
+                               <pointsize>10</pointsize>
+                              </font>
+                             </property>
+                             <property name="styleSheet">
+                              <string notr="true">QTextEdit{
  	border:2px solid rgb(41, 44, 53);
     border-radius:22px;
 	background-color: rgb(41, 44, 53);
@@ -3608,30 +3713,134 @@ QTextEdit:hover{
 QTextEdit:focus{
 	border:2px solid rgb(85,170,255);
 }</string>
-                    </property>
-                    <property name="frameShape">
-                     <enum>QFrame::StyledPanel</enum>
-                    </property>
-                    <property name="frameShadow">
-                     <enum>QFrame::Plain</enum>
-                    </property>
-                    <property name="sizeAdjustPolicy">
-                     <enum>QAbstractScrollArea::AdjustToContents</enum>
-                    </property>
-                    <property name="html">
-                     <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+                             </property>
+                             <property name="frameShape">
+                              <enum>QFrame::StyledPanel</enum>
+                             </property>
+                             <property name="frameShadow">
+                              <enum>QFrame::Plain</enum>
+                             </property>
+                             <property name="sizeAdjustPolicy">
+                              <enum>QAbstractScrollArea::AdjustToContents</enum>
+                             </property>
+                             <property name="html">
+                              <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; font-size:10pt; font-weight:400; font-style:normal;&quot;&gt;
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'MS Shell Dlg 2'; font-size:7.8pt;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                    </property>
-                    <property name="placeholderText">
-                     <string>Ask Anything</string>
-                    </property>
-                   </widget>
-                   <zorder>textEdit_2</zorder>
-                   <zorder>addButton_2</zorder>
-                   <zorder>searchButton_2</zorder>
+                             </property>
+                             <property name="placeholderText">
+                              <string>Ask Anything</string>
+                             </property>
+                            </widget>
+                            <widget class="StickyButton" name="searchButton_2">
+                             <property name="geometry">
+                              <rect>
+                               <x>640</x>
+                               <y>50</y>
+                               <width>45</width>
+                               <height>45</height>
+                              </rect>
+                             </property>
+                             <property name="sizePolicy">
+                              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                               <horstretch>0</horstretch>
+                               <verstretch>0</verstretch>
+                              </sizepolicy>
+                             </property>
+                             <property name="minimumSize">
+                              <size>
+                               <width>45</width>
+                               <height>45</height>
+                              </size>
+                             </property>
+                             <property name="maximumSize">
+                              <size>
+                               <width>45</width>
+                               <height>45</height>
+                              </size>
+                             </property>
+                             <property name="font">
+                              <font>
+                               <family>Noto Sans Medium</family>
+                               <pointsize>10</pointsize>
+                              </font>
+                             </property>
+                             <property name="cursor">
+                              <cursorShape>PointingHandCursor</cursorShape>
+                             </property>
+                             <property name="styleSheet">
+                              <string notr="true">QPushButton{
+	background:none;
+	border:none;
+	color:rgba(255, 255, 255, 180);
+	background-color: rgb(41, 44, 53);
+	border-radius: 21px ;
+	margin-top:3px;
+}
+QPushButton:hover{
+	background-color: rgb(45, 48, 58);
+}</string>
+                             </property>
+                             <property name="text">
+                              <string/>
+                             </property>
+                             <property name="icon">
+                              <iconset>
+                               <normaloff>Reqs/search.png</normaloff>Reqs/search.png</iconset>
+                             </property>
+                             <property name="iconSize">
+                              <size>
+                               <width>27</width>
+                               <height>27</height>
+                              </size>
+                             </property>
+                            </widget>
+                            <zorder>textEdit_2</zorder>
+                            <zorder>addButton_2</zorder>
+                            <zorder>searchButton_2</zorder>
+                           </widget>
+                          </item>
+                          <item>
+                           <widget class="QFrame" name="frame_61">
+                            <property name="frameShape">
+                             <enum>QFrame::StyledPanel</enum>
+                            </property>
+                            <property name="frameShadow">
+                             <enum>QFrame::Raised</enum>
+                            </property>
+                           </widget>
+                          </item>
+                         </layout>
+                        </widget>
+                       </item>
+                      </layout>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QFrame" name="frame_47">
+                      <property name="minimumSize">
+                       <size>
+                        <width>280</width>
+                        <height>0</height>
+                       </size>
+                      </property>
+                      <property name="maximumSize">
+                       <size>
+                        <width>400</width>
+                        <height>16777215</height>
+                       </size>
+                      </property>
+                      <property name="frameShape">
+                       <enum>QFrame::StyledPanel</enum>
+                      </property>
+                      <property name="frameShadow">
+                       <enum>QFrame::Raised</enum>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
                   </widget>
                  </item>
                 </layout>

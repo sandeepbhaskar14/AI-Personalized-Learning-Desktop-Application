@@ -1,3 +1,6 @@
 Testings/
+testing models/
+__pycache__/
+Temp/
 auth_token.x
 *.pyc

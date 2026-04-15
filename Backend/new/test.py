@@ -1,5 +1,5 @@
 from main import app, db
-from models import User, Result, Prompt
+from models import User, results
 
 
 # delete a user
@@ -13,5 +13,5 @@ from models import User, Result, Prompt
         
 # delete a table
 with app.app_context():
-    Prompt.__table__.drop(db.engine)
+    results.__table__.drop(db.engine)
     print("results table deleted")
