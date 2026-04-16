@@ -7,15 +7,19 @@
 
 
 # importing necessary packages and modules ------------------------------
-from PyQt5 import QtWidgets, QtCore, QtGui
-from PyQt5.QtCore import Qt, QRect, QPropertyAnimation, QThread, pyqtSignal, QPoint, pyqtSlot, QTimer
-from PyQt5.QtWidgets import *
-import sys, threading, time
+from PyQt5.QtCore import Qt
+import sys, threading
 from termcolor import colored
-import subprocess
 
-# importing Main UI
-from mainUI import Ui_MainWindow
+from ui.mainUI import Ui_MainWindow
+
+from auth.logout import LogOutService
+
+from services.handle_requests import (run_login, 
+                                      verify_token, 
+                                      save_user_preferences, 
+                                      get_user_preferences, 
+                                      send_prompt)
 
 # -------------------------------------------------------------------------
 
@@ -23,10 +27,13 @@ from mainUI import Ui_MainWindow
 class MainWindow(QMainWindow) :
     def __init__(self) :
         QMainWindow.__init__(self)
-        from ui_functions import UIFunctions
-        
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
+        
+        from ui_controllers.ui_functions import UIFunctions
+        self.ui_functions = UIFunctions(self)
+        self.ui_functions.uiDefinitions()
+        
 
         # Attach button to text edit
         self.ui.searchButton.setTextEdit(self.ui.text_prompt)
@@ -41,8 +48,8 @@ class MainWindow(QMainWindow) :
         def MoveWindow(event) :
             
             # ==>> Restore before move
-            if UIFunctions.returnStatus(self) == 1 :
-                UIFunctions.maximize_restore(self)
+            if self.ui_functions.returnStatus(self) == 1 :
+                self.ui_functions.maximize_restore(self)
             
             # ==>> Move Window when left button is clicked and dragged
             if event.buttons() == Qt.LeftButton :
@@ -51,22 +58,18 @@ class MainWindow(QMainWindow) :
                 event.accept()   
 
         # ==>> Move Window
-        self.ui.status_bar.mouseMoveEvent = MoveWindow
-
-        # ==>> UI functions and removing title bar
-        UIFunctions.uiDefinitions(self)   
-        from login_window import LoginWindow    
+        self.ui.status_bar.mouseMoveEvent = MoveWindow 
 
 
         # ==>> Page toggle and Strips color function calling
-        self.ui.toggle_button.clicked.connect(lambda: UIFunctions.toggle(self, 275, True))
-        self.ui.button_new_chat.clicked.connect(lambda: UIFunctions.setNewChatPage(self))
-        self.ui.button_settings.clicked.connect(lambda: UIFunctions.setSettingsPage(self))
-        self.ui.buttonAbout.clicked.connect(lambda: UIFunctions.setAboutPage(self))
-        self.ui.acc_button.clicked.connect(lambda: UIFunctions.setAccountPage(self))
-        self.ui.button_preferences.clicked.connect(lambda: UIFunctions.setPreferencesPage(self))
+        self.ui.toggle_button.clicked.connect(lambda: self.ui_functions.toggle(275, True))
+        self.ui.button_new_chat.clicked.connect(lambda: self.ui_functions.setNewChatPage())
+        self.ui.button_settings.clicked.connect(lambda: self.ui_functions.setSettingsPage())
+        self.ui.buttonAbout.clicked.connect(lambda: self.ui_functions.setAboutPage())
+        self.ui.acc_button.clicked.connect(lambda: self.ui_functions.setAccountPage())
+        self.ui.button_preferences.clicked.connect(lambda: self.ui_functions.setPreferencesPage())
         self.ui.button_logout.clicked.connect(lambda: self.invoke_logout())
-        self.ui.login_button.clicked.connect(lambda: self.run_login())
+        self.ui.login_button.clicked.connect(lambda: run_login(self))
         
         self.ui.button_save.clicked.connect(lambda: self.handle_user_preferences())
         self.ui.searchButton.clicked.connect(lambda: self.send_user_prompt())
@@ -90,88 +93,25 @@ class MainWindow(QMainWindow) :
     def mousePressEvent(self, event) :
         self.dragpos = event.globalPos()
         
-    def run_login(self):
-        from login_window import LoginWindow
-        login = LoginWindow(self)
-        # login.exec_()
-        result = login.exec_()  # modal dialog
-
-        if result == QDialog.Accepted:
-            self.ui.login_button.setText("Logged In")
-            self.ui.login_button.setEnabled(False)
-            
-    def after_verify_token(self, response):
-        if response.get("status_code") == 200:
-            username = response.get("user")
-            email = response.get("email")
-            print(colored(f"Logged in user: {username}", 'green'))
-            
-            stylesheet = """
-                            font-family: 'Roboto';       /* font family */
-                            font-size: 10pt;            /* font size */
-                            font-style: italic;         /* italic text */
-                            color: green;                /* text color */
-                    """
-            self.ui.login_button.setText("Logged In")
-            self.ui.login_button.setStyleSheet(stylesheet)
-            self.ui.login_button.setEnabled(False)
-            self.ui.login_button.setToolTip(username)
-            self.ui.logged_in_label.setText('Logged In')
-            self.ui.logged_in_label.setStyleSheet(stylesheet)
-            
-            self.ui.username_label.setText(f"Username: {username}")
-            self.ui.email_label.setText(f"Email: {email}")
-            self.ui.button_logout.setText('Log Out')
-            self.ui.button_save.setEnabled(True)
-            
-            self.update_user_preferences()
-        else:
-            print(colored(response.get("message"), 'red'))
-            self.run_login()
-        
-    def verify_token(self):
-        subprocess.run(
-            ["icacls", "auth_token.x", "/remove:d", "Everyone"],
-            check=True
-        )
-        with open("auth_token.x", "r") as token_file:
-            token = token_file.read()
-            token_file.close()
-            
-        if token:
-            from handle_requests import verify_token_
-
-            # call async function with callback
-            verify_token_(self, token, self.after_verify_token)
-        else:
-            self.run_login()
-
-        subprocess.run(
-            ["icacls", "auth_token.x", "/deny", "Everyone:(R)"],
-            check=True
-        )
 
     def get_threads(self) :
         total_threads = threading.activeCount()
         print(colored("Total active threads : {}".format(total_threads), 'green'))
         
     def handle_user_preferences(self):
-        from handle_requests import save_user_preferences
         save_user_preferences(self)
 
-    def update_user_preferences(self):
-        from handle_requests import get_user_preferences
+    def update_user_preferences(self): 
         get_user_preferences(self)
         
     def invoke_logout(self):
         if self.ui.button_logout.text() == 'Log In':
-            self.run_login()
+            run_login(self)
         if self.ui.button_logout.text() == 'Log Out':
-            import logout
-            logout.LogOut(self)
+            self.service = LogOutService(self)
+            self.service.LogOut()
         
     def send_user_prompt(self):
-        from handle_requests import send_prompt
         send_prompt(self)
 
 
@@ -181,7 +121,9 @@ def main():
     main_window.show()
 
     # main_window.run_login()
-    MainWindow.verify_token(main_window)
+    # MainWindow.verify_token(main_window)
+    
+    verify_token(main_window)
 
     # ==>> Update User settings when reopen application 
     # main_window.update_user_preferences()

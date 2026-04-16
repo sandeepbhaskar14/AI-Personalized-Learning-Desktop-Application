@@ -1,16 +1,12 @@
-from main import *
+from PyQt5.QtCore import QThread, pyqtSignal, pyqtSlot
+from PyQt5.QtWidgets import QDialog
 
-# importing login window
-# from login_window import LoginWindow
-from functools import partial
-import re
-import requests
 from termcolor import colored
+import subprocess, re
+import requests
 
 import uuid
 
-# importing message window
-# from show_message import messageWindow
 
 
 # worker thread to acheive parallelism and avoid GUI frezzing
@@ -212,6 +208,89 @@ def login_update_ui(self):
     self.ui.login_button.setEnabled(True)
     self.ui.label_3.setText('LOG IN')
     self.ui.label_3.setStyleSheet('color:rgba(255, 255, 255, 180);')    
+    
+    
+    
+    
+def run_login(self):
+    from auth.login_window import LoginWindow
+    login = LoginWindow(self)
+    # login.exec_()
+    result = login.exec_()  # modal dialog
+
+    if result == QDialog.Accepted:
+        self.ui.login_button.setText("Logged In")
+        self.ui.login_button.setEnabled(False)
+        
+def after_verify_token(self, response):
+    if response.get("status_code") == 200:
+        username = response.get("user")
+        email = response.get("email")
+        print(colored(f"Logged in user: {username}", 'green'))
+        
+        stylesheet = """
+                        font-family: 'Roboto';       /* font family */
+                        font-size: 10pt;            /* font size */
+                        font-style: italic;         /* italic text */
+                        color: green;                /* text color */
+                """
+        self.ui.login_button.setText("Logged In")
+        self.ui.login_button.setStyleSheet(stylesheet)
+        self.ui.login_button.setEnabled(False)
+        self.ui.login_button.setToolTip(username)
+        self.ui.logged_in_label.setText('Logged In')
+        self.ui.logged_in_label.setStyleSheet(stylesheet)
+        
+        self.ui.username_label.setText(f"Username: {username}")
+        self.ui.email_label.setText(f"Email: {email}")
+        self.ui.button_logout.setText('Log Out')
+        self.ui.button_save.setEnabled(True)
+        
+        self.update_user_preferences()
+    else:
+        print(colored(response.get("message"), 'red'))
+        run_login(self)
+        
+def verify_token_(self, token, callback):
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+
+    self.thread = WorkerThread(None, 'GET', 'verify_token', headers=headers)
+
+    def handle_response(response):
+        callback(self, response)
+
+    self.thread.data_fetched.connect(handle_response)
+    self.thread.start()
+    
+def verify_token(self):
+    subprocess.run(
+        ["icacls", "auth_token.x", "/remove:d", "Everyone"],
+        check=True
+    )
+    with open("auth_token.x", "r") as token_file:
+        token = token_file.read()
+        token_file.close()
+        
+    if token:
+        # call async function with callback
+        verify_token_(self, token, after_verify_token)
+    else:
+        run_login(self)
+
+    subprocess.run(
+        ["icacls", "auth_token.x", "/deny", "Everyone:(R)"],
+        check=True
+    )
+    
+    
+    
+    
+    
+    
+    
 
 @pyqtSlot(dict)
 def handle_login_response(self, response, main_win):
@@ -228,7 +307,8 @@ def handle_login_response(self, response, main_win):
         subprocess.run(["icacls", "auth_token.x", "/deny", "Everyone:(R)"], check=True)
  
         print(colored('Verifying token!', 'magenta'))
-        MainWindow.verify_token(main_win)
+        # MainWindow.verify_token(main_win)
+        verify_token(main_win)
         
         
     else:  # username doesn't exists
@@ -271,7 +351,7 @@ def update_preference_button(self):
 @pyqtSlot(dict)
 def handle_preference_response(self, response):
     if 'saved' in response['message']:
-        from show_message import messageWindow
+        from ui_controllers.show_message import messageWindow
         msg_win = messageWindow(self)
         msg_win.exec_()
 
@@ -316,8 +396,7 @@ def save_user_preferences(self):
 
 
 def handle_token_expired(main_window):
-    from main import run_login
-    run_login(main_window, 'forced')
+    run_login(main_window)
     
 
 @pyqtSlot(dict)
@@ -361,20 +440,6 @@ def get_user_preferences(self):
     
     self.thread = WorkerThread(None, 'GET', 'preferences', headers=headers)
     self.thread.data_fetched.connect(lambda response: get_preference_response(self, response))
-    self.thread.start()
-    
-def verify_token_(self, token, callback):
-    headers = {
-        "Authorization": f"Bearer {token}",
-        "Content-Type": "application/json"
-    }
-
-    self.thread = WorkerThread(None, 'GET', 'verify_token', headers=headers)
-
-    def handle_response(response):
-        callback(response)
-
-    self.thread.data_fetched.connect(handle_response)
     self.thread.start()
     
 

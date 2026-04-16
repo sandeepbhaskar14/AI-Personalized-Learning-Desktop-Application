@@ -1,16 +1,19 @@
-from main import *
-from handle_requests import *
-
 from PyQt5.QtGui import QPixmap
+from PyQt5 import QtCore, QtGui
+from PyQt5.QtWidgets import QGraphicsDropShadowEffect, QDialog
+from PyQt5.QtCore import Qt
+
 from PIL import Image, ImageFilter
 import io
 
+from services.handle_requests import signup, login
+
 class LoginWindow(QDialog):
-    def __init__(self, main_win=None):
+    def __init__(self, main_win):
         super().__init__()
         self.main_window = main_win
 
-        from dlogin_page import Ui_Dialog
+        from ui.login_page_ui import Ui_Dialog
         self.ui = Ui_Dialog()
         self.ui.setupUi(self)
         

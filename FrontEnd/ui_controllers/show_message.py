@@ -1,11 +1,12 @@
-
-from main import *
+from PyQt5 import QtCore, QtGui
+from PyQt5.QtWidgets import QGraphicsDropShadowEffect, QDialog
+from PyQt5.QtCore import Qt
 
 class messageWindow(QDialog):        
-    def __init__(self, main_win=None):
+    def __init__(self, main_win):
         super().__init__(main_win)
         
-        from message import Ui_Dialog
+        from ui.message_ui import Ui_Dialog
         self.ui = Ui_Dialog()
         self.ui.setupUi(self)
     

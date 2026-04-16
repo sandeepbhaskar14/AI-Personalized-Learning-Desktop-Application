@@ -3520,8 +3520,8 @@ QPushButton:hover{
                               <rect>
                                <x>0</x>
                                <y>0</y>
-                               <width>735</width>
-                               <height>539</height>
+                               <width>100</width>
+                               <height>30</height>
                               </rect>
                              </property>
                             </widget>
@@ -3863,12 +3863,12 @@ QPushButton:hover{
   <customwidget>
    <class>AutoGrowTextEdit</class>
    <extends>QTextEdit</extends>
-   <header location="global">auto_grow_text_edit</header>
+   <header location="global">ui_controllers.auto_grow_text_edit</header>
   </customwidget>
   <customwidget>
    <class>StickyButton</class>
    <extends>QPushButton</extends>
-   <header location="global">sticky_search_button</header>
+   <header location="global">ui_controllers.sticky_search_button</header>
   </customwidget>
  </customwidgets>
  <resources/>

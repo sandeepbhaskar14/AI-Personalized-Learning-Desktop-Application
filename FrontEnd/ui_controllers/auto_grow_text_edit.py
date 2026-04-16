@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QTextEdit
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QTextBlockFormat, QTextCursor, QFont
+from PyQt5.QtGui import QTextCursor, QFont
 
 
 class AutoGrowTextEdit(QTextEdit):

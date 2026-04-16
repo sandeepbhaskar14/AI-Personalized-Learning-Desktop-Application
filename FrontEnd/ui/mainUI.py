@@ -1851,8 +1851,8 @@ class Ui_MainWindow(object):
 "</style></head><body style=\" font-family:\'Roboto\'; font-size:10pt; font-weight:400; font-style:normal;\">\n"
 "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:\'MS Shell Dlg 2\'; font-size:7.8pt;\"><br /></p></body></html>"))
         self.textEdit_2.setPlaceholderText(_translate("MainWindow", "Ask Anything"))
-from auto_grow_text_edit import AutoGrowTextEdit
-from sticky_search_button import StickyButton
+from ui_controllers.auto_grow_text_edit import AutoGrowTextEdit
+from ui_controllers.sticky_search_button import StickyButton
 
 
 if __name__ == "__main__":
