@@ -1,13 +1,16 @@
-from main import *
-from models import User
+from models.user_models import db, User
+from flask import request, jsonify, Blueprint, current_app
+import jwt
+import datetime
 
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 import re
 
+auth_bp = Blueprint("auth", __name__)
 
 # Register route
-@app.route("/signup", methods=["POST"])
+@auth_bp.route("/signup", methods=["POST"])
 def signup():
     data = request.get_json()
 
@@ -64,7 +67,7 @@ def signup():
         })
         
         
-@app.route("/login", methods=["POST"])
+@auth_bp.route("/login", methods=["POST"])
 def login():
     try:
         data = request.get_json()
@@ -92,7 +95,7 @@ def login():
                 "role": user.role,
                 "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=12)
             },
-            app.config["SECRET_KEY"],
+            current_app.config["SECRET_KEY"],
             algorithm="HS256"
         )
 

@@ -1,4 +1,4 @@
-from models import Prompt
+from models.user_models import Prompt
 from langchain_core.messages import HumanMessage, AIMessage
 import tiktoken
 
@@ -38,7 +38,7 @@ def get_chat_history(chat_id):
         if prompt.response:
             messages.append(AIMessage(content=prompt.response.result_text))
 
-    # 🔥 Token trimming
+    # Token trimming
     while count_tokens(messages) > MAX_TOKENS and len(messages) > 2:
         messages.pop(0)  # remove oldest message
 

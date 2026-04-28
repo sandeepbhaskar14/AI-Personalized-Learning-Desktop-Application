@@ -95,7 +95,7 @@ class WorkerThread(QThread):
                     stream=True   # IMPORTANT
                 )
 
-                for chunk in response.iter_content(chunk_size=1, decode_unicode=True):
+                for chunk in response.iter_lines(chunk_size=1, decode_unicode=True):
                     if chunk:
                         self.products_data_fetched.emit(chunk)  # 🔥 stream token
 
@@ -286,12 +286,6 @@ def verify_token(self):
     )
     
     
-    
-    
-    
-    
-    
-
 @pyqtSlot(dict)
 def handle_login_response(self, response, main_win):
     if 'token' in response:   # user logged in
@@ -444,16 +438,44 @@ def get_user_preferences(self):
     
 
 def get_prompt_stream(self, chunk):
-    if not hasattr(self, "stream_output"):
-        self.stream_output = ""
+    import markdown
 
-    print(colored(chunk, 'green'), end='')
-    
-    
+    if not hasattr(self, "full_text"):
+        self.full_text = ""
+
+    self.full_text += chunk
+
+    html = f"""
+    <style>
+    pre {{
+        background-color: #1e1e1e;
+        padding: 10px;
+        border-radius: 6px;
+    }}
+    code {{
+        font-family: Consolas;
+        color: #dcdcdc;
+    }}
+    </style>
+    {markdown.markdown(self.full_text, extensions=["fenced_code"])}
+    """
+
+    self.ai_bubble.label.setHtml(html)
+    self.ai_bubble.adjust_height()
 
 def send_prompt(self):
-    self.stream_output = ""  # reset buffer
-    # self.ui.output_box.setText("")
+    from ui.widgets.chat_bubble import ChatBubble
+    self.ui.stackedWidget.setCurrentWidget(self.ui.conversation_page)
+    
+    text = self.ui.text_prompt.toPlainText()
+
+    # 👤 User bubble
+    user_bubble = ChatBubble(text, is_user=True)
+    self.chat_area.add_bubble(user_bubble)
+
+    # 🤖 AI bubble (empty initially)
+    self.ai_bubble = ChatBubble("", is_user=False)
+    self.chat_area.add_bubble(self.ai_bubble)
     
     payload = {
     "prompt_text": self.ui.text_prompt.toPlainText(),

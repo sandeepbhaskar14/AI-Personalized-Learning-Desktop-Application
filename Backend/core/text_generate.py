@@ -1,17 +1,17 @@
-from main import *
-import os, sys, time
+import time
 
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
+from langchain_core.messages import HumanMessage, SystemMessage
 
-from models import Response as DBResponse
+from models.user_models import db
+from models.user_models import Response as DBResponse
 
 from flask import Response, stream_with_context
-from chat_memory import get_chat_history
-from langchain_core.messages import HumanMessage, SystemMessage
-from stream_handler import StreamingHandler
+from memory.chat_memory import get_chat_history
+from memory.guest_memory import get_guest_history, save_guest_message, guest_sessions
+from core.stream_handler import StreamingHandler
 
-from guest_memory import get_guest_history, save_guest_message, guest_sessions
 
 load_dotenv()
 
@@ -56,6 +56,7 @@ def stream_ai_response(prompt, chat_id, text, task, difficulty, style):
             messages = get_guest_history(chat_id)
 
         system_prompt = f"""
+        Always format code using triple backticks with language.
         You are a personalized learning assistant.
         Task: {task}
         Difficulty: {difficulty}
@@ -65,15 +66,11 @@ def stream_ai_response(prompt, chat_id, text, task, difficulty, style):
         messages.insert(0, SystemMessage(content=system_prompt))
         messages.append(HumanMessage(content=text))
 
-        llm.callbacks = [handler]
-        llm.streaming = True
-
-        llm.invoke(messages)
-
-        # STREAM TOKENS
-        for token in handler.tokens:
-            full_text += token
-            yield token
+        for chunk in llm.stream(messages):
+            token = chunk.content
+            if token:
+                full_text += token
+                yield token + "\n"
         
         if prompt: # user logged in
             # AFTER STREAM COMPLETE → SAVE DB
@@ -94,4 +91,11 @@ def stream_ai_response(prompt, chat_id, text, task, difficulty, style):
             save_guest_message(chat_id, text, full_text)
             guest_sessions[chat_id] = guest_sessions[chat_id][-10:]
 
-    return Response(stream_with_context(generate()), content_type="text/plain")
+    return Response(
+    stream_with_context(generate()),
+    content_type="text/plain",
+    headers={
+        "Cache-Control": "no-cache",
+        "X-Accel-Buffering": "no"
+    }
+)

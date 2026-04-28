@@ -2,5 +2,9 @@ Testings/
 testing models/
 __pycache__/
 Temp/
+new/
+static/
+instance/
 auth_token.x
 *.pyc
+source.txt

@@ -60,7 +60,7 @@ class Prompt(db.Model):
     prompt_text = db.Column(db.Text, nullable=False)
 
     prompt_type = db.Column(
-        db.Enum("search", "summary", "quiz", "flashcards", "explain", name="prompt_types"),
+        db.Enum("search", "summary", "quiz", "mcqs", "flashcards", "explain", name="prompt_types"),
         default="search"
     )
 

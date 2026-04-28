@@ -1,16 +1,26 @@
-from flask import Flask, request, jsonify, session
-from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
+from flask import Flask, request, jsonify
 from flask_cors import CORS
-import jwt, time, threading
-import datetime
-from models import db, UserPreferences
+import jwt, threading
+
+from services.login_register import auth_bp
+from core.process_prompts import chat_bp
+
+from models.user_models import db, UserPreferences
+from services.auth_service import verify_token
 from termcolor import colored
+
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "d3f8a6a8e24c4c3ea7f9b9c4e7a113cf4eb839927e6a5f761f2ce94804bc9e78"
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///app.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+app.register_blueprint(auth_bp)
+app.register_blueprint(chat_bp)
+
 CORS(app)
+
+print(colored(app.url_map, 'cyan'))
     
 # initialising the database
 db.init_app(app)
@@ -19,23 +29,7 @@ with app.app_context():
     db.create_all()
     print("Database and tables created!")
     
-    
-def verify_token():
-    token = None
-    print(request.headers)
-    if "Authorization" in request.headers and len(request.headers["Authorization"].split()) == 2: # [bearer, token]
-        token = request.headers["Authorization"].split()[1]
-    if not token:
-        return None, jsonify({"message": "Token is missing!"}), 401
-    try:
-        data = jwt.decode(token, app.config["SECRET_KEY"], algorithms=["HS256"])
-        print(colored(data, 'green'))
-        user_id = data["user_id"]
-        return user_id, None, None
-    except:
-        return None, jsonify({"message": "Token is invalid!"}), 403
         
-
 @app.route("/verify_token", methods=["GET"])
 def verify_token_():
     token = None
@@ -107,10 +101,7 @@ def get_preferences():
     
 
 if __name__ == "__main__":
-    from login_register import *  # just want to keep login/register methods in another file
-    from process_prompts import *  # just want to keep processing prompt and generating output methods in another file
-    
-    print('Total threads: {}'.format(threading.active_count()))
+    print(colored('Total threads: {}'.format(threading.active_count()), 'magenta'))
     
     app.run(debug=True, use_reloader=True)
 

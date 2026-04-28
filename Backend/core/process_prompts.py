@@ -2,18 +2,21 @@
 
 import time
 import datetime
-from flask import request, jsonify
+from flask import request, jsonify, Blueprint
 # from flask_jwt_extended import jwt_required, get_jwt_identity
 
-from models import Prompt, UserPreferences
-from main import app, db, verify_token
+from models.user_models import db, Prompt, UserPreferences
+from services.auth_service import verify_token
 
 import uuid
 
 # Import AI service
-from text_generate import stream_ai_response
+from core.text_generate import stream_ai_response
 
-@app.route("/prompt/stream", methods=["POST"])
+
+chat_bp = Blueprint("chat", __name__)
+
+@chat_bp.route("/prompt/stream", methods=["POST"])
 def stream_prompt():
     if request.headers: # user logged in
         user_id, error_response, status_code = verify_token()
