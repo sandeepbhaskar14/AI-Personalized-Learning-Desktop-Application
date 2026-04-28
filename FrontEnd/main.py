@@ -19,7 +19,8 @@ from services.handle_requests import (run_login,
                                       verify_token, 
                                       save_user_preferences, 
                                       get_user_preferences, 
-                                      send_prompt)
+                                      send_prompt,
+                                      stop_prompt)
 
 from ui_controllers.ui_functions import UIFunctions
 
@@ -79,9 +80,12 @@ class MainWindow(QMainWindow) :
         self.ui.button_save.clicked.connect(lambda: self.handle_user_preferences())
         self.ui.searchButton.clicked.connect(lambda: self.send_user_prompt())
         self.ui.searchButton_2.clicked.connect(lambda: self.send_user_prompt())
+        
+        self.ui.button_new_chat.clicked.connect(self.handle_new_chat)
     
-        # self.ui.settings_button.clicked.connect(lambda: UIFunctions.Settings_Page(self))
-        # self.ui.settings_button_2.clicked.connect(lambda: UIFunctions.Settings_Page(self))  
+        # self.ui.searchButton.clicked.connect(lambda: self._handle_search_or_stop())
+        self.ui.searchButton_2.clicked.connect(lambda: self._handle_search_or_stop())
+    
         
     def keyPressEvent(self, event):
         if event.key() in (Qt.Key_Return, Qt.Key_Enter):
@@ -119,7 +123,39 @@ class MainWindow(QMainWindow) :
         
     def send_user_prompt(self):
         send_prompt(self)
+        
+    def clear_chat(self):
+        layout = self.ui.chat_layout   # or self.chat_layout if defined inside
+        while layout.count():
+            item = layout.takeAt(0)
+            widget = item.widget()
+            if widget:
+                widget.deleteLater()
+                
+        self.chat_area = ChatArea()
+        self.ui.chat_layout.addWidget(self.chat_area)
 
+    def handle_new_chat(self):
+        # clear UI
+        self.clear_chat()
+
+        # reset session/chat
+        self.chat_id = None
+        self.session_id = None
+
+        # reset streaming buffer
+        if hasattr(self, "full_text"):
+            del self.full_text
+
+        self._scroll_pending = False
+        
+    def _handle_search_or_stop(self):
+        """Toggle: if streaming → stop, else → send."""
+        if getattr(self, '_is_streaming', False):
+            stop_prompt(self)
+            self._is_streaming = False
+        else:
+            self.send_user_prompt()
 
 def main():
     app = QApplication(sys.argv)

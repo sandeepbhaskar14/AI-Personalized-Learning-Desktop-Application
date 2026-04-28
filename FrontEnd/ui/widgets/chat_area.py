@@ -3,7 +3,6 @@ from PyQt5.QtWidgets import QWidget, QVBoxLayout, QScrollArea
 class ChatArea(QScrollArea):
     def __init__(self):
         super().__init__()
-
         self.container = QWidget()
         self.layout = QVBoxLayout(self.container)
         self.layout.setSpacing(10)
@@ -19,3 +18,4 @@ class ChatArea(QScrollArea):
         self.verticalScrollBar().setValue(
             self.verticalScrollBar().maximum()
         )
+        

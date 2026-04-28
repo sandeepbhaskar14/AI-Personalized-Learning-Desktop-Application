@@ -11,10 +11,19 @@ from services.auth_service import verify_token
 import uuid
 
 # Import AI service
-from core.text_generate import stream_ai_response
+from core.text_generate import stream_ai_response, active_streams
 
 
 chat_bp = Blueprint("chat", __name__)
+
+@chat_bp.route("/prompt/stop", methods=["POST"])
+def stop_prompt():
+    data = request.json
+    chat_id = data.get("chat_id")
+    if chat_id and chat_id in active_streams:
+        active_streams[chat_id] = True  # signal the generator to stop
+        return jsonify({"message": "Stop signal sent", "status_code": 200})
+    return jsonify({"message": "No active stream found", "status_code": 404})
 
 @chat_bp.route("/prompt/stream", methods=["POST"])
 def stream_prompt():

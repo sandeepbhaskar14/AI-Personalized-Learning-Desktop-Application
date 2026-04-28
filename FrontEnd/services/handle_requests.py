@@ -1,5 +1,8 @@
-from PyQt5.QtCore import QThread, pyqtSignal, pyqtSlot, QTimer
+from PyQt5.QtCore import QThread, pyqtSignal, pyqtSlot, QTimer, QSize
 from PyQt5.QtWidgets import QDialog
+from PyQt5.QtGui import QIcon
+from PyQt5 import QtGui
+
 
 from termcolor import colored
 import subprocess, re
@@ -437,7 +440,7 @@ def get_user_preferences(self):
     self.thread.start()
     
 
-def get_prompt_stream(self, chunk):
+def get_prompt_stream(self, chunk):    
     if not hasattr(self, "full_text"):
         self.full_text = ""
 
@@ -458,14 +461,51 @@ def _do_scroll(self):
 
 
 def finalize_stream(self):
+    self._is_streaming = False
     if hasattr(self, 'full_text') and self.full_text:
         self.ai_bubble.finish_stream(self.full_text)
     self._scroll_pending = False
     self.chat_area.scroll_to_bottom()
+    
+    stop_icon = QtGui.QIcon()
+    stop_icon.addPixmap(QtGui.QPixmap("Reqs/search.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+    self.ui.searchButton_2.setIcon(stop_icon)
+    self.ui.searchButton_2.setIconSize(QSize(27, 27))
+
+
+def stop_prompt(self):
+    """Send stop signal to server."""
+    chat_id = getattr(self, 'current_chat_id', None)
+    if not chat_id:
+        return
+
+    headers = {}
+    token = getattr(self, 'jwt_token', '')
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+
+    try:
+        requests.post(
+            'http://localhost:5000/prompt/stop',
+            json={"chat_id": chat_id},
+            headers=headers,
+            timeout=3
+        )
+    except requests.exceptions.RequestException:
+        pass
+
+    # Reset UI immediately
+    _on_stream_stopped(self)
+
+
+def _on_stream_stopped(self):
+    # self.ui.searchButton.setIcon(...)   # restore search icon
+    self.ui.searchButton_2.setIcon(QIcon('/Reqs/search.png')) # restore search icon
 
 
 def send_prompt(self):
     from ui.widgets.chat_bubble import ChatBubble
+    import uuid
 
     if hasattr(self, 'full_text'):
         del self.full_text
@@ -478,12 +518,21 @@ def send_prompt(self):
         text = self.ui.text_prompt_2.toPlainText().strip()
     if not text:
         return
-    
+
     self.ui.text_prompt.clear()
     self.ui.text_prompt_2.clear()
+    
+    self._is_streaming = True
+    
+    stop_icon = QtGui.QIcon()
+    stop_icon.addPixmap(QtGui.QPixmap("Reqs/stop.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+    self.ui.searchButton_2.setIcon(stop_icon)
+    self.ui.searchButton_2.setIconSize(QSize(32, 32))
+
+    # Generate and store chat_id for this session
+    self.current_chat_id = str(uuid.uuid4())
 
     chat_width = self.chat_area.width()
-
     user_bubble = ChatBubble(text, is_user=True, available_width=chat_width)
     self.chat_area.add_bubble(user_bubble)
 
@@ -493,10 +542,10 @@ def send_prompt(self):
 
     payload = {
         "prompt_text": text,
-        "prompt_type": self.ui.preferred_output.currentText().lower()
+        "prompt_type": self.ui.preferred_output.currentText().lower(),
+        "chat_id": self.current_chat_id,  # Send chat_id to server
     }
 
-    # Read token once — blocking icacls calls stay but only run once per send
     subprocess.run(["icacls", "auth_token.x", "/remove:d", "Everyone"], check=True)
     with open('auth_token.x', 'r', encoding='utf-8') as f:
         self.jwt_token = f.read().strip()
@@ -504,11 +553,6 @@ def send_prompt(self):
 
     headers = ({"Authorization": f"Bearer {self.jwt_token}"}
                if self.jwt_token else None)
-
-    if not self.jwt_token:
-        import uuid
-        self.session_id = str(uuid.uuid4())
-        payload["session_id"] = self.session_id
 
     self.thread = WorkerThread(payload, 'POST', '/prompt/stream', headers=headers)
     self.thread.products_data_fetched.connect(

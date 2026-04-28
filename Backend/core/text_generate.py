@@ -43,8 +43,10 @@ llm = ChatOpenAI(
 # PROMPTS
 # -------------------------------
 
-def stream_ai_response(prompt, chat_id, text, task, difficulty, style):
+active_streams = {}  # chat_id -> stop_flag
 
+def stream_ai_response(prompt, chat_id, text, task, difficulty, style):
+    active_streams[chat_id] = False  # False = keep going
     def generate():
         handler = StreamingHandler()
         full_text = ""
@@ -67,11 +69,18 @@ def stream_ai_response(prompt, chat_id, text, task, difficulty, style):
         messages.append(HumanMessage(content=text))
 
         for chunk in llm.stream(messages):
+            if active_streams.get(chat_id, False):
+                active_streams.pop(chat_id, None)
+                break  # Stop yielding
+            
             token = chunk.content
             if token:
                 full_text += token
                 encoded = token.replace("\n", "<<NEWLINE>>")
                 yield encoded + "\n"
+                
+        # Cleanup flag
+        active_streams.pop(chat_id, None)
         
         if prompt: # user logged in
             # AFTER STREAM COMPLETE → SAVE DB
