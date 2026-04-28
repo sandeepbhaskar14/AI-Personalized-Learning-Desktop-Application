@@ -1,4 +1,4 @@
-from PyQt5.QtCore import QThread, pyqtSignal, pyqtSlot
+from PyQt5.QtCore import QThread, pyqtSignal, pyqtSlot, QTimer
 from PyQt5.QtWidgets import QDialog
 
 from termcolor import colored
@@ -438,70 +438,80 @@ def get_user_preferences(self):
     
 
 def get_prompt_stream(self, chunk):
-    import markdown
-
     if not hasattr(self, "full_text"):
         self.full_text = ""
 
-    self.full_text += chunk
+    self.full_text += chunk.replace("<<NEWLINE>>", "\n")
 
-    html = f"""
-    <style>
-    pre {{
-        background-color: #1e1e1e;
-        padding: 10px;
-        border-radius: 6px;
-    }}
-    code {{
-        font-family: Consolas;
-        color: #dcdcdc;
-    }}
-    </style>
-    {markdown.markdown(self.full_text, extensions=["fenced_code"])}
-    """
+    # Update bubble text (throttled internally by QTimer)
+    self.ai_bubble.append_stream(self.full_text)
 
-    self.ai_bubble.label.setHtml(html)
-    self.ai_bubble.adjust_height()
+    # Throttle scroll: only scroll if not already scheduled
+    if not getattr(self, '_scroll_pending', False):
+        self._scroll_pending = True
+        QTimer.singleShot(100, lambda: _do_scroll(self))
+
+
+def _do_scroll(self):
+    self._scroll_pending = False
+    self.chat_area.scroll_to_bottom()
+
+
+def finalize_stream(self):
+    if hasattr(self, 'full_text') and self.full_text:
+        self.ai_bubble.finish_stream(self.full_text)
+    self._scroll_pending = False
+    self.chat_area.scroll_to_bottom()
+
 
 def send_prompt(self):
     from ui.widgets.chat_bubble import ChatBubble
-    self.ui.stackedWidget.setCurrentWidget(self.ui.conversation_page)
-    
-    text = self.ui.text_prompt.toPlainText()
 
-    # 👤 User bubble
-    user_bubble = ChatBubble(text, is_user=True)
+    if hasattr(self, 'full_text'):
+        del self.full_text
+    self._scroll_pending = False
+
+    self.ui.stackedWidget.setCurrentWidget(self.ui.conversation_page)
+
+    text = self.ui.text_prompt.toPlainText().strip()
+    if not text:
+        text = self.ui.text_prompt_2.toPlainText().strip()
+    if not text:
+        return
+    
+    self.ui.text_prompt.clear()
+    self.ui.text_prompt_2.clear()
+
+    chat_width = self.chat_area.width()
+
+    user_bubble = ChatBubble(text, is_user=True, available_width=chat_width)
     self.chat_area.add_bubble(user_bubble)
 
-    # 🤖 AI bubble (empty initially)
-    self.ai_bubble = ChatBubble("", is_user=False)
+    self.ai_bubble = ChatBubble("", is_user=False, available_width=chat_width)
+    self.ai_bubble.start_stream()
     self.chat_area.add_bubble(self.ai_bubble)
-    
+
     payload = {
-    "prompt_text": self.ui.text_prompt.toPlainText(),
-    "prompt_type": self.ui.preferred_output.currentText().lower() #task type
+        "prompt_text": text,
+        "prompt_type": self.ui.preferred_output.currentText().lower()
     }
 
+    # Read token once — blocking icacls calls stay but only run once per send
     subprocess.run(["icacls", "auth_token.x", "/remove:d", "Everyone"], check=True)
-    file = open('auth_token.x', 'r', encoding='utf-8')
-    self.jwt_token = file.read()
-    file.close()
+    with open('auth_token.x', 'r', encoding='utf-8') as f:
+        self.jwt_token = f.read().strip()
     subprocess.run(["icacls", "auth_token.x", "/deny", "Everyone:(R)"], check=True)
-    
-    # if user is logged in
-    if self.jwt_token:
-        headers = {
-            "Authorization": f"Bearer {self.jwt_token}"
-        }
-    
-    # send prompt in guest mode
-    else:
+
+    headers = ({"Authorization": f"Bearer {self.jwt_token}"}
+               if self.jwt_token else None)
+
+    if not self.jwt_token:
+        import uuid
         self.session_id = str(uuid.uuid4())
         payload["session_id"] = self.session_id
-        headers = None
-    
+
     self.thread = WorkerThread(payload, 'POST', '/prompt/stream', headers=headers)
-    self.thread.products_data_fetched.connect(lambda chunk: get_prompt_stream(self, chunk))
+    self.thread.products_data_fetched.connect(
+        lambda chunk: get_prompt_stream(self, chunk))
+    self.thread.finished.connect(lambda: finalize_stream(self))
     self.thread.start()
-
-

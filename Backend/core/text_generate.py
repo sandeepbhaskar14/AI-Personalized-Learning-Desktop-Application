@@ -70,7 +70,8 @@ def stream_ai_response(prompt, chat_id, text, task, difficulty, style):
             token = chunk.content
             if token:
                 full_text += token
-                yield token + "\n"
+                encoded = token.replace("\n", "<<NEWLINE>>")
+                yield encoded + "\n"
         
         if prompt: # user logged in
             # AFTER STREAM COMPLETE → SAVE DB

@@ -78,6 +78,7 @@ class MainWindow(QMainWindow) :
         
         self.ui.button_save.clicked.connect(lambda: self.handle_user_preferences())
         self.ui.searchButton.clicked.connect(lambda: self.send_user_prompt())
+        self.ui.searchButton_2.clicked.connect(lambda: self.send_user_prompt())
     
         # self.ui.settings_button.clicked.connect(lambda: UIFunctions.Settings_Page(self))
         # self.ui.settings_button_2.clicked.connect(lambda: UIFunctions.Settings_Page(self))  

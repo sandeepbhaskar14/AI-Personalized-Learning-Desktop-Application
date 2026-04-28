@@ -3635,7 +3635,7 @@ QPushButton:hover{
                               </size>
                              </property>
                             </widget>
-                            <widget class="AutoGrowTextEdit" name="textEdit_2">
+                            <widget class="AutoGrowTextEdit" name="text_prompt_2">
                              <property name="enabled">
                               <bool>true</bool>
                              </property>
@@ -3786,7 +3786,7 @@ QPushButton:hover{
                               </size>
                              </property>
                             </widget>
-                            <zorder>textEdit_2</zorder>
+                            <zorder>text_prompt_2</zorder>
                             <zorder>addButton_2</zorder>
                             <zorder>searchButton_2</zorder>
                            </widget>

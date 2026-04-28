@@ -1685,23 +1685,23 @@ class Ui_MainWindow(object):
         self.addButton_2.setIcon(icon8)
         self.addButton_2.setIconSize(QtCore.QSize(22, 22))
         self.addButton_2.setObjectName("addButton_2")
-        self.textEdit_2 = AutoGrowTextEdit(self.frame_60)
-        self.textEdit_2.setEnabled(True)
-        self.textEdit_2.setGeometry(QtCore.QRect(10, 50, 681, 50))
+        self.text_prompt_2 = AutoGrowTextEdit(self.frame_60)
+        self.text_prompt_2.setEnabled(True)
+        self.text_prompt_2.setGeometry(QtCore.QRect(10, 50, 681, 50))
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.textEdit_2.sizePolicy().hasHeightForWidth())
-        self.textEdit_2.setSizePolicy(sizePolicy)
-        self.textEdit_2.setMinimumSize(QtCore.QSize(0, 50))
-        self.textEdit_2.setMaximumSize(QtCore.QSize(16777215, 50))
-        self.textEdit_2.setSizeIncrement(QtCore.QSize(0, 0))
-        self.textEdit_2.setBaseSize(QtCore.QSize(0, 0))
+        sizePolicy.setHeightForWidth(self.text_prompt_2.sizePolicy().hasHeightForWidth())
+        self.text_prompt_2.setSizePolicy(sizePolicy)
+        self.text_prompt_2.setMinimumSize(QtCore.QSize(0, 50))
+        self.text_prompt_2.setMaximumSize(QtCore.QSize(16777215, 50))
+        self.text_prompt_2.setSizeIncrement(QtCore.QSize(0, 0))
+        self.text_prompt_2.setBaseSize(QtCore.QSize(0, 0))
         font = QtGui.QFont()
         font.setFamily("Roboto")
         font.setPointSize(10)
-        self.textEdit_2.setFont(font)
-        self.textEdit_2.setStyleSheet("QTextEdit{\n"
+        self.text_prompt_2.setFont(font)
+        self.text_prompt_2.setStyleSheet("QTextEdit{\n"
 "     border:2px solid rgb(41, 44, 53);\n"
 "    border-radius:22px;\n"
 "    background-color: rgb(41, 44, 53);\n"
@@ -1719,10 +1719,10 @@ class Ui_MainWindow(object):
 "QTextEdit:focus{\n"
 "    border:2px solid rgb(85,170,255);\n"
 "}")
-        self.textEdit_2.setFrameShape(QtWidgets.QFrame.StyledPanel)
-        self.textEdit_2.setFrameShadow(QtWidgets.QFrame.Plain)
-        self.textEdit_2.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
-        self.textEdit_2.setObjectName("textEdit_2")
+        self.text_prompt_2.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.text_prompt_2.setFrameShadow(QtWidgets.QFrame.Plain)
+        self.text_prompt_2.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+        self.text_prompt_2.setObjectName("text_prompt_2")
         self.searchButton_2 = StickyButton(self.frame_60)
         self.searchButton_2.setGeometry(QtCore.QRect(640, 50, 45, 45))
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
@@ -1752,7 +1752,7 @@ class Ui_MainWindow(object):
         self.searchButton_2.setIcon(icon7)
         self.searchButton_2.setIconSize(QtCore.QSize(27, 27))
         self.searchButton_2.setObjectName("searchButton_2")
-        self.textEdit_2.raise_()
+        self.text_prompt_2.raise_()
         self.addButton_2.raise_()
         self.searchButton_2.raise_()
         self.horizontalLayout_34.addWidget(self.frame_60)
@@ -1841,12 +1841,12 @@ class Ui_MainWindow(object):
         self.label_11.setText(_translate("MainWindow", "AI Personalized Learning App"))
         self.label_12.setText(_translate("MainWindow", "version: 1.0"))
         self.button_check_update.setText(_translate("MainWindow", "Check for Update"))
-        self.textEdit_2.setHtml(_translate("MainWindow", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
+        self.text_prompt_2.setHtml(_translate("MainWindow", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
 "p, li { white-space: pre-wrap; }\n"
 "</style></head><body style=\" font-family:\'Roboto\'; font-size:10pt; font-weight:400; font-style:normal;\">\n"
 "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:\'MS Shell Dlg 2\'; font-size:7.8pt;\"><br /></p></body></html>"))
-        self.textEdit_2.setPlaceholderText(_translate("MainWindow", "Ask Anything"))
+        self.text_prompt_2.setPlaceholderText(_translate("MainWindow", "Ask Anything"))
 from ui_controllers.auto_grow_text_edit import AutoGrowTextEdit
 from ui_controllers.sticky_search_button import StickyButton
 
