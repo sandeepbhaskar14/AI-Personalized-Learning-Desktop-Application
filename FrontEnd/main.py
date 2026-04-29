@@ -20,7 +20,9 @@ from services.handle_requests import (run_login,
                                       save_user_preferences, 
                                       get_user_preferences, 
                                       send_prompt,
-                                      stop_prompt)
+                                      stop_prompt,
+                                      load_chat_history,
+                                      on_chat_history_item_clicked)
 
 from ui_controllers.ui_functions import UIFunctions
 
@@ -85,6 +87,31 @@ class MainWindow(QMainWindow) :
     
         # self.ui.searchButton.clicked.connect(lambda: self._handle_search_or_stop())
         self.ui.searchButton_2.clicked.connect(lambda: self._handle_search_or_stop())
+        
+        self.ui.chat_history.itemClicked.connect(lambda item: on_chat_history_item_clicked(self, item))
+        
+        # style the list widget so it fits the dark sidebar
+        self.ui.chat_history.setStyleSheet("""
+            QListWidget {
+                background: transparent;
+                border: none;
+                color: rgba(255,255,255,160);
+                font-family: 'Roboto';
+                font-size: 10pt;
+            }
+            QListWidget::item {
+                padding: 8px 12px;
+                border-radius: 6px;
+            }
+            QListWidget::item:hover {
+                background-color: rgb(55, 62, 76);
+                color: rgba(255,255,255,220);
+            }
+            QListWidget::item:selected {
+                background-color: rgb(48, 85, 140);
+                color: white;
+            }
+        """)
     
         
     def keyPressEvent(self, event):
@@ -140,7 +167,7 @@ class MainWindow(QMainWindow) :
         self.clear_chat()
 
         # reset session/chat
-        self.chat_id = None
+        self.current_chat_id = None
         self.session_id = None
 
         # reset streaming buffer

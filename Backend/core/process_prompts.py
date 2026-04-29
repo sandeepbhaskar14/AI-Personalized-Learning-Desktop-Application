@@ -16,46 +16,63 @@ from core.text_generate import stream_ai_response, active_streams
 
 chat_bp = Blueprint("chat", __name__)
 
-@chat_bp.route("/chats", methods=["GET"])
+@chat_bp.route("/chat", methods=["GET"])
 def get_chats():
     user_id, error_response, status_code = verify_token()
+    if status_code in (401, 403):
+        return jsonify({"message": "Unauthorized", "status_code": status_code})
 
-    if not user_id:
-        return jsonify([])  # guests: no saved chats
-
-    chats = Chat.query.filter_by(user_id=user_id)\
-        .order_by(Chat.updated_at.desc())\
+    chats = (
+        Chat.query
+        .filter_by(user_id=user_id)
+        .order_by(Chat.updated_at.desc())
+        .limit(50)
         .all()
+    )
 
-    return jsonify([
-        {
-            "chat_id": c.chat_id,
-            "title": c.title,
-            "updated_at": c.updated_at
-        }
-        for c in chats
-    ])
-    
+    return jsonify({
+        "status_code": 200,
+        "chats": [
+            {
+                "chat_id": c.chat_id,
+                "title": c.title,
+                "updated_at": c.updated_at.isoformat() if c.updated_at else c.created_at.isoformat()
+            }
+            for c in chats
+        ]
+    })
+
+
 @chat_bp.route("/chat/<chat_id>", methods=["GET"])
-def get_chat(chat_id):
+def get_chat_messages(chat_id):
     user_id, error_response, status_code = verify_token()
-    
-    if not user_id:
-        return jsonify([])  # guests: no chats associated with this user_id
+    if status_code in (401, 403):
+        return jsonify({"message": "Unauthorized", "status_code": status_code})
 
-    prompts = Prompt.query.filter_by(chat_id=chat_id)\
-        .order_by(Prompt.created_at.asc())\
+    # Verify this chat belongs to the user
+    chat = Chat.query.filter_by(chat_id=chat_id, user_id=user_id).first()
+    if not chat:
+        return jsonify({"message": "Chat not found", "status_code": 404})
+
+    prompts = (
+        Prompt.query
+        .filter_by(chat_id=chat_id, user_id=user_id)
+        .order_by(Prompt.created_at.asc())
         .all()
+    )
 
-    chat_data = []
-
+    messages = []
     for p in prompts:
-        chat_data.append({
-            "user": p.prompt_text,
-            "ai": p.response.result_text if p.response else ""
-        })
+        messages.append({"role": "user", "text": p.prompt_text})
+        if p.response:
+            messages.append({"role": "ai", "text": p.response.result_text})
 
-    return jsonify(chat_data)
+    return jsonify({
+        "status_code": 200,
+        "chat_id": chat_id,
+        "title": chat.title,
+        "messages": messages
+    })
 
 @chat_bp.route("/prompt/stop", methods=["POST"])
 def stop_prompt():

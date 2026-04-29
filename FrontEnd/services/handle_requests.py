@@ -1,7 +1,7 @@
-from PyQt5.QtCore import QThread, pyqtSignal, pyqtSlot, QTimer, QSize
+from PyQt5.QtCore import QThread, pyqtSignal, pyqtSlot, QTimer, QSize, Qt
 from PyQt5.QtWidgets import QDialog
 from PyQt5.QtGui import QIcon
-from PyQt5 import QtGui
+from PyQt5 import QtGui, QtWidgets
 
 
 from termcolor import colored
@@ -48,7 +48,7 @@ class WorkerThread(QThread):
                 response = requests.get('http://localhost:5000/verify_token', headers=self.headers)
 
                 print("Status Code:", response.status_code)
-                print("Raw Response:", response.text)  # 👈 IMPORTANT
+                print("Raw Response:", response.text)  # IMPORTANT
 
                 data = response.json()  # this is failing
                 self.data_fetched.emit(data)
@@ -100,10 +100,31 @@ class WorkerThread(QThread):
 
                 for chunk in response.iter_lines(chunk_size=1, decode_unicode=True):
                     if chunk:
-                        self.products_data_fetched.emit(chunk)  # 🔥 stream token
+                        self.products_data_fetched.emit(chunk)  # stream token
 
             except requests.exceptions.RequestException as e:
                 print(colored('Connection Error: Server not reachable', 'red'))
+        
+        elif self.method == 'GET' and self.route == 'chats':
+            try:
+                response = requests.get(
+                    'http://localhost:5000/chat',
+                    headers=self.headers
+                )
+                self.data_fetched.emit(response.json())
+            except requests.exceptions.RequestException as e:
+                print(colored(f'Connection Error: {e}', 'red'))
+
+        elif self.method == 'GET' and self.route.startswith('chat/'):
+            try:
+                chat_id = self.route.split('/', 1)[1]
+                response = requests.get(
+                    f'http://localhost:5000/chat/{chat_id}',
+                    headers=self.headers
+                )
+                self.data_fetched.emit(response.json())
+            except requests.exceptions.RequestException as e:
+                print(colored(f'Connection Error: {e}', 'red'))
                         
                         
 '''          
@@ -250,6 +271,7 @@ def after_verify_token(self, response):
         self.ui.button_save.setEnabled(True)
         
         self.update_user_preferences()
+        load_chat_history(self)
     else:
         print(colored(response.get("message"), 'red'))
         run_login(self)
@@ -471,6 +493,8 @@ def finalize_stream(self):
     stop_icon.addPixmap(QtGui.QPixmap("Reqs/search.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
     self.ui.searchButton_2.setIcon(stop_icon)
     self.ui.searchButton_2.setIconSize(QSize(27, 27))
+    
+    load_chat_history(self)
 
 
 def stop_prompt(self):
@@ -521,16 +545,20 @@ def send_prompt(self):
 
     self.ui.text_prompt.clear()
     self.ui.text_prompt_2.clear()
-    
+
     self._is_streaming = True
-    
+
     stop_icon = QtGui.QIcon()
     stop_icon.addPixmap(QtGui.QPixmap("Reqs/stop.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
     self.ui.searchButton_2.setIcon(stop_icon)
     self.ui.searchButton_2.setIconSize(QSize(32, 32))
 
-    # Generate and store chat_id for this session
-    self.current_chat_id = str(uuid.uuid4())
+    # ── KEY FIX: reuse the same chat_id for the whole session ──
+    # Only generate a new UUID if there is no active chat session yet.
+    # handle_new_chat() resets self.current_chat_id to None, so a new
+    # UUID is created only for the very first message of each session.
+    if not getattr(self, 'current_chat_id', None):
+        self.current_chat_id = str(uuid.uuid4())
 
     chat_width = self.chat_area.width()
     user_bubble = ChatBubble(text, is_user=True, available_width=chat_width)
@@ -543,7 +571,7 @@ def send_prompt(self):
     payload = {
         "prompt_text": text,
         "prompt_type": self.ui.preferred_output.currentText().lower(),
-        "chat_id": self.current_chat_id,  # Send chat_id to server
+        "chat_id": self.current_chat_id,
     }
 
     subprocess.run(["icacls", "auth_token.x", "/remove:d", "Everyone"], check=True)
@@ -559,3 +587,75 @@ def send_prompt(self):
         lambda chunk: get_prompt_stream(self, chunk))
     self.thread.finished.connect(lambda: finalize_stream(self))
     self.thread.start()
+    
+    
+    
+# ── Chat History ──────────────────────────────────────────────────────────────
+
+def load_chat_history(self):
+    """Fetch all chats for the logged-in user and populate the sidebar."""
+    token = getattr(self, 'jwt_token', '')
+    if not token:
+        return
+
+    headers = {"Authorization": f"Bearer {token}"}
+    self.chat_history_thread = WorkerThread(None, 'GET', 'chats', headers=headers)
+    self.chat_history_thread.data_fetched.connect(
+        lambda response: _populate_chat_history(self, response)
+    )
+    self.chat_history_thread.start()
+
+
+def _populate_chat_history(self, response):
+    if response.get('status_code') != 200:
+        return
+
+    chats = response.get('chats', [])
+    list_widget = self.ui.chat_history
+    list_widget.clear()
+
+    for chat in chats:
+        item = QtWidgets.QListWidgetItem(chat['title'])
+        item.setData(Qt.UserRole, chat['chat_id'])          # store chat_id on item
+        item.setToolTip(chat['title'])
+        list_widget.addItem(item)
+
+
+def on_chat_history_item_clicked(self, item):
+    """Load a previous chat when the user clicks it in the sidebar."""
+    chat_id = item.data(Qt.UserRole)
+    if not chat_id:
+        return
+
+    token = getattr(self, 'jwt_token', '')
+    headers = {"Authorization": f"Bearer {token}"}
+
+    self.load_chat_thread = WorkerThread(None, 'GET', f'chat/{chat_id}', headers=headers)
+    self.load_chat_thread.data_fetched.connect(
+        lambda response: _render_loaded_chat(self, response)
+    )
+    self.load_chat_thread.start()
+
+
+def _render_loaded_chat(self, response):
+    if response.get('status_code') != 200:
+        return
+
+    from ui.widgets.chat_bubble import ChatBubble
+
+    # Switch to conversation page and clear existing bubbles
+    self.ui.stackedWidget.setCurrentWidget(self.ui.conversation_page)
+    self.clear_chat()
+
+    chat_id   = response['chat_id']
+    messages  = response.get('messages', [])
+    chat_width = self.chat_area.width()
+
+    for msg in messages:
+        is_user = msg['role'] == 'user'
+        bubble  = ChatBubble(msg['text'], is_user=is_user, available_width=chat_width)
+        self.chat_area.add_bubble(bubble)
+
+    # Resume this chat so new messages continue the same session
+    self.current_chat_id = chat_id
+    self.chat_area.scroll_to_bottom()
