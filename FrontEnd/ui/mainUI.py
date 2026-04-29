@@ -14,7 +14,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(1390, 759)
+        MainWindow.resize(1480, 759)
         MainWindow.setStyleSheet("QMainWindow{\n"
 "    background-color: rgb(45, 45, 45);\n"
 "    border-radius:10px;\n"
@@ -164,7 +164,7 @@ class Ui_MainWindow(object):
 "}")
         self.toggle_button.setText("")
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap("Reqs/menu-50 copy.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap("../Reqs/menu-50 copy.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.toggle_button.setIcon(icon)
         self.toggle_button.setIconSize(QtCore.QSize(25, 25))
         self.toggle_button.setObjectName("toggle_button")
@@ -185,7 +185,7 @@ class Ui_MainWindow(object):
 "border:none;")
         self.icon.setText("")
         icon1 = QtGui.QIcon()
-        icon1.addPixmap(QtGui.QPixmap("Reqs/app_icon.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon1.addPixmap(QtGui.QPixmap("../Reqs/app_icon.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.icon.setIcon(icon1)
         self.icon.setIconSize(QtCore.QSize(27, 27))
         self.icon.setObjectName("icon")
@@ -224,7 +224,7 @@ class Ui_MainWindow(object):
 "}")
         self.button_minimize.setText("")
         icon2 = QtGui.QIcon()
-        icon2.addPixmap(QtGui.QPixmap("Reqs/subtract-24 copy.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon2.addPixmap(QtGui.QPixmap("../Reqs/subtract-24 copy.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.button_minimize.setIcon(icon2)
         self.button_minimize.setObjectName("button_minimize")
         self.horizontalLayout_3.addWidget(self.button_minimize)
@@ -240,7 +240,7 @@ class Ui_MainWindow(object):
 "}")
         self.button_restore.setText("")
         icon3 = QtGui.QIcon()
-        icon3.addPixmap(QtGui.QPixmap("Reqs/maximize.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon3.addPixmap(QtGui.QPixmap("../Reqs/maximize.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.button_restore.setIcon(icon3)
         self.button_restore.setObjectName("button_restore")
         self.horizontalLayout_3.addWidget(self.button_restore)
@@ -257,7 +257,7 @@ class Ui_MainWindow(object):
 "}")
         self.button_close.setText("")
         icon4 = QtGui.QIcon()
-        icon4.addPixmap(QtGui.QPixmap("Reqs/close-24 copy.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon4.addPixmap(QtGui.QPixmap("../Reqs/close-24 copy.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.button_close.setIcon(icon4)
         self.button_close.setObjectName("button_close")
         self.horizontalLayout_3.addWidget(self.button_close)
@@ -274,7 +274,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout_4.setSpacing(0)
         self.horizontalLayout_4.setObjectName("horizontalLayout_4")
         self.toggle_frame_left = QtWidgets.QFrame(self.Content)
-        self.toggle_frame_left.setMinimumSize(QtCore.QSize(85, 0))
+        self.toggle_frame_left.setMinimumSize(QtCore.QSize(220, 0))
         self.toggle_frame_left.setMaximumSize(QtCore.QSize(85, 16777215))
         self.toggle_frame_left.setStyleSheet("background-color: #272C36;\n"
 "border-radius:0px;\n"
@@ -317,11 +317,19 @@ class Ui_MainWindow(object):
 "border:none;\n"
 "color: rgba(255, 255, 255, 180);")
         icon5 = QtGui.QIcon()
-        icon5.addPixmap(QtGui.QPixmap("Reqs/new_chat.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon5.addPixmap(QtGui.QPixmap("../Reqs/new_chat.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.button_new_chat.setIcon(icon5)
         self.button_new_chat.setIconSize(QtCore.QSize(35, 35))
         self.button_new_chat.setObjectName("button_new_chat")
         self.verticalLayout_3.addWidget(self.frame_status)
+        self.label_7 = QtWidgets.QLabel(self.toggle_frame_left)
+        self.label_7.setMinimumSize(QtCore.QSize(0, 40))
+        self.label_7.setStyleSheet("background:none;\n"
+"border:none;\n"
+"padding-left:10px;\n"
+"color: rgba(255, 255, 255, 140);")
+        self.label_7.setObjectName("label_7")
+        self.verticalLayout_3.addWidget(self.label_7)
         self.frame_driver_protection_2 = QtWidgets.QFrame(self.toggle_frame_left)
         self.frame_driver_protection_2.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.frame_driver_protection_2.setFrameShadow(QtWidgets.QFrame.Raised)
@@ -330,9 +338,9 @@ class Ui_MainWindow(object):
         self.verticalLayout_10.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout_10.setSpacing(0)
         self.verticalLayout_10.setObjectName("verticalLayout_10")
-        self.listWidget = QtWidgets.QListWidget(self.frame_driver_protection_2)
-        self.listWidget.setObjectName("listWidget")
-        self.verticalLayout_10.addWidget(self.listWidget)
+        self.chat_history = QtWidgets.QListWidget(self.frame_driver_protection_2)
+        self.chat_history.setObjectName("chat_history")
+        self.verticalLayout_10.addWidget(self.chat_history)
         self.verticalLayout_3.addWidget(self.frame_driver_protection_2)
         self.frame_settings = QtWidgets.QFrame(self.toggle_frame_left)
         self.frame_settings.setMinimumSize(QtCore.QSize(0, 60))
@@ -364,7 +372,7 @@ class Ui_MainWindow(object):
 "border:none;\n"
 "color: rgba(255, 255, 255, 180);")
         icon6 = QtGui.QIcon()
-        icon6.addPixmap(QtGui.QPixmap("Reqs/settings-50 copy.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon6.addPixmap(QtGui.QPixmap("../Reqs/settings-50 copy.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.button_settings.setIcon(icon6)
         self.button_settings.setIconSize(QtCore.QSize(35, 35))
         self.button_settings.setObjectName("button_settings")
@@ -427,7 +435,7 @@ class Ui_MainWindow(object):
         self.label.setStyleSheet("background:none;\n"
 "border:none;")
         self.label.setText("")
-        self.label.setPixmap(QtGui.QPixmap("Reqs/protected.png"))
+        self.label.setPixmap(QtGui.QPixmap("C:/Users/san76/.designer/backup/Reqs/protected.png"))
         self.label.setAlignment(QtCore.Qt.AlignBottom|QtCore.Qt.AlignHCenter)
         self.label.setObjectName("label")
         self.horizontalLayout_8.addWidget(self.label)
@@ -477,7 +485,7 @@ class Ui_MainWindow(object):
 "}")
         self.searchButton.setText("")
         icon7 = QtGui.QIcon()
-        icon7.addPixmap(QtGui.QPixmap("Reqs/search.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon7.addPixmap(QtGui.QPixmap("../Reqs/search.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.searchButton.setIcon(icon7)
         self.searchButton.setIconSize(QtCore.QSize(27, 27))
         self.searchButton.setObjectName("searchButton")
@@ -502,7 +510,7 @@ class Ui_MainWindow(object):
 "}")
         self.addButton.setText("")
         icon8 = QtGui.QIcon()
-        icon8.addPixmap(QtGui.QPixmap("Reqs/add_icon.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon8.addPixmap(QtGui.QPixmap("../Reqs/add_icon.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.addButton.setIcon(icon8)
         self.addButton.setIconSize(QtCore.QSize(22, 22))
         self.addButton.setObjectName("addButton")
@@ -1787,6 +1795,7 @@ class Ui_MainWindow(object):
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
         self.status_bar.setText(_translate("MainWindow", "  AI Personalized Learning App"))
         self.button_new_chat.setText(_translate("MainWindow", "     New Chat           "))
+        self.label_7.setText(_translate("MainWindow", "Recent chats"))
         self.button_settings.setText(_translate("MainWindow", "      Settings        "))
         self.labelProtection.setText(_translate("MainWindow", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"

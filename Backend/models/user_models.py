@@ -104,6 +104,25 @@ class Response(db.Model):
 
     def __repr__(self):
         return f"<Response prompt_id={self.prompt_id}>"
+    
+class Chat(db.Model):
+    __tablename__ = "chats"
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    user_id = db.Column(db.Integer, nullable=True)
+
+    chat_id = db.Column(db.String(50), unique=True, index=True)
+
+    title = db.Column(db.String(200), default="New Chat")
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    updated_at = db.Column(
+        db.DateTime,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow
+    )
 
 
 class PromptHistory(db.Model):

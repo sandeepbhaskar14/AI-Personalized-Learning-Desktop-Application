@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1390</width>
+    <width>1480</width>
     <height>759</height>
    </rect>
   </property>
@@ -257,7 +257,7 @@ QFrame:hover{
                </property>
                <property name="icon">
                 <iconset>
-                 <normaloff>Reqs/menu-50 copy.png</normaloff>Reqs/menu-50 copy.png</iconset>
+                 <normaloff>../Reqs/menu-50 copy.png</normaloff>../Reqs/menu-50 copy.png</iconset>
                </property>
                <property name="iconSize">
                 <size>
@@ -317,7 +317,7 @@ border:none;</string>
                </property>
                <property name="icon">
                 <iconset>
-                 <normaloff>Reqs/app_icon.png</normaloff>Reqs/app_icon.png</iconset>
+                 <normaloff>../Reqs/app_icon.png</normaloff>../Reqs/app_icon.png</iconset>
                </property>
                <property name="iconSize">
                 <size>
@@ -410,7 +410,7 @@ QPushButton:hover{
                </property>
                <property name="icon">
                 <iconset>
-                 <normaloff>Reqs/subtract-24 copy.png</normaloff>Reqs/subtract-24 copy.png</iconset>
+                 <normaloff>../Reqs/subtract-24 copy.png</normaloff>../Reqs/subtract-24 copy.png</iconset>
                </property>
               </widget>
              </item>
@@ -437,7 +437,7 @@ QPushButton:hover{
                </property>
                <property name="icon">
                 <iconset>
-                 <normaloff>Reqs/maximize.png</normaloff>Reqs/maximize.png</iconset>
+                 <normaloff>../Reqs/maximize.png</normaloff>../Reqs/maximize.png</iconset>
                </property>
               </widget>
              </item>
@@ -465,7 +465,7 @@ QPushButton:hover{
                </property>
                <property name="icon">
                 <iconset>
-                 <normaloff>Reqs/close-24 copy.png</normaloff>Reqs/close-24 copy.png</iconset>
+                 <normaloff>../Reqs/close-24 copy.png</normaloff>../Reqs/close-24 copy.png</iconset>
                </property>
               </widget>
              </item>
@@ -507,7 +507,7 @@ border-bottom-right-radius:10px;</string>
            <widget class="QFrame" name="toggle_frame_left">
             <property name="minimumSize">
              <size>
-              <width>85</width>
+              <width>220</width>
               <height>0</height>
              </size>
             </property>
@@ -622,7 +622,7 @@ color: rgba(255, 255, 255, 180);</string>
                 </property>
                 <property name="icon">
                  <iconset>
-                  <normaloff>Reqs/new_chat.png</normaloff>Reqs/new_chat.png</iconset>
+                  <normaloff>../Reqs/new_chat.png</normaloff>../Reqs/new_chat.png</iconset>
                 </property>
                 <property name="iconSize">
                  <size>
@@ -631,6 +631,25 @@ color: rgba(255, 255, 255, 180);</string>
                  </size>
                 </property>
                </widget>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="label_7">
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>40</height>
+                </size>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">background:none;
+border:none;
+padding-left:10px;
+color: rgba(255, 255, 255, 140);</string>
+               </property>
+               <property name="text">
+                <string>Recent chats</string>
+               </property>
               </widget>
              </item>
              <item>
@@ -658,7 +677,7 @@ color: rgba(255, 255, 255, 180);</string>
                  <number>0</number>
                 </property>
                 <item>
-                 <widget class="QListWidget" name="listWidget"/>
+                 <widget class="QListWidget" name="chat_history"/>
                 </item>
                </layout>
               </widget>
@@ -738,7 +757,7 @@ color: rgba(255, 255, 255, 180);</string>
                 </property>
                 <property name="icon">
                  <iconset>
-                  <normaloff>Reqs/settings-50 copy.png</normaloff>Reqs/settings-50 copy.png</iconset>
+                  <normaloff>../Reqs/settings-50 copy.png</normaloff>../Reqs/settings-50 copy.png</iconset>
                 </property>
                 <property name="iconSize">
                  <size>
@@ -901,7 +920,7 @@ border:none;</string>
                              <string/>
                             </property>
                             <property name="pixmap">
-                             <pixmap>Reqs/protected.png</pixmap>
+                             <pixmap>C:/Users/san76/.designer/backup/Reqs/protected.png</pixmap>
                             </property>
                             <property name="alignment">
                              <set>Qt::AlignBottom|Qt::AlignHCenter</set>
@@ -1019,7 +1038,7 @@ QPushButton:hover{
                           </property>
                           <property name="icon">
                            <iconset>
-                            <normaloff>Reqs/search.png</normaloff>Reqs/search.png</iconset>
+                            <normaloff>../Reqs/search.png</normaloff>../Reqs/search.png</iconset>
                           </property>
                           <property name="iconSize">
                            <size>
@@ -1075,7 +1094,7 @@ QPushButton:hover{
                           </property>
                           <property name="icon">
                            <iconset>
-                            <normaloff>Reqs/add_icon.png</normaloff>Reqs/add_icon.png</iconset>
+                            <normaloff>../Reqs/add_icon.png</normaloff>../Reqs/add_icon.png</iconset>
                           </property>
                           <property name="iconSize">
                            <size>
@@ -3626,7 +3645,7 @@ QPushButton:hover{
                              </property>
                              <property name="icon">
                               <iconset>
-                               <normaloff>Reqs/add_icon.png</normaloff>Reqs/add_icon.png</iconset>
+                               <normaloff>../Reqs/add_icon.png</normaloff>../Reqs/add_icon.png</iconset>
                              </property>
                              <property name="iconSize">
                               <size>
@@ -3777,7 +3796,7 @@ QPushButton:hover{
                              </property>
                              <property name="icon">
                               <iconset>
-                               <normaloff>Reqs/search.png</normaloff>Reqs/search.png</iconset>
+                               <normaloff>../Reqs/search.png</normaloff>../Reqs/search.png</iconset>
                              </property>
                              <property name="iconSize">
                               <size>

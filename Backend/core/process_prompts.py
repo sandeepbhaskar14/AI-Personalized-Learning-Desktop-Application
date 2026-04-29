@@ -5,7 +5,7 @@ import datetime
 from flask import request, jsonify, Blueprint
 # from flask_jwt_extended import jwt_required, get_jwt_identity
 
-from models.user_models import db, Prompt, UserPreferences
+from models.user_models import db, Prompt, UserPreferences, Chat
 from services.auth_service import verify_token
 
 import uuid
@@ -50,6 +50,20 @@ def stream_prompt():
     # LOGGED-IN USER FLOW
     # ===============================
     if user_id:
+        # create chat if new
+        chat = Chat.query.filter_by(chat_id=chat_id).first()
+        if not chat:
+            chat = Chat(
+                user_id=user_id,
+                chat_id=chat_id,
+                title=prompt_text[:50]  # first message as title
+            )
+            db.session.add(chat)
+        else:
+            chat.updated_at = datetime.datetime.utcnow()
+
+        db.session.commit()
+        
         # Create prompt
         prompt = Prompt(
             user_id=user_id,
