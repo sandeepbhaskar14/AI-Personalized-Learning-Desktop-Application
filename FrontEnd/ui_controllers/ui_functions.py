@@ -84,8 +84,8 @@ class UIFunctions:
             ui.button_new_chat.setText("     New Chat           ")
             ui.button_settings.setText("      Settings        ")
         else:
-            ui.button_new_chat.setText("")
-            ui.button_settings.setText("")
+            ui.button_new_chat.setText("                              ")
+            ui.button_settings.setText("                          ")
 
     def uiDefinitions(self):
         self.window.setWindowFlag(QtCore.Qt.FramelessWindowHint)

@@ -50,6 +50,12 @@ class MainWindow(QMainWindow) :
         self.ui.addButton.setTextEdit(self.ui.text_prompt)
         self.ui.addButton.setAnchor("bottom-left")
         
+        # "Recent chats" label set hidden initially
+        self.ui.label_7.setVisible(False)
+
+        # The chat history list set hidden initialy
+        self.ui.chat_history.setVisible(False)
+        
         # update preferences onle when user is logged in
         self.ui.button_save.setEnabled(False)
         
