@@ -16,6 +16,47 @@ from core.text_generate import stream_ai_response, active_streams
 
 chat_bp = Blueprint("chat", __name__)
 
+@chat_bp.route("/chats", methods=["GET"])
+def get_chats():
+    user_id, error_response, status_code = verify_token()
+
+    if not user_id:
+        return jsonify([])  # guests: no saved chats
+
+    chats = Chat.query.filter_by(user_id=user_id)\
+        .order_by(Chat.updated_at.desc())\
+        .all()
+
+    return jsonify([
+        {
+            "chat_id": c.chat_id,
+            "title": c.title,
+            "updated_at": c.updated_at
+        }
+        for c in chats
+    ])
+    
+@chat_bp.route("/chat/<chat_id>", methods=["GET"])
+def get_chat(chat_id):
+    user_id, error_response, status_code = verify_token()
+    
+    if not user_id:
+        return jsonify([])  # guests: no chats associated with this user_id
+
+    prompts = Prompt.query.filter_by(chat_id=chat_id)\
+        .order_by(Prompt.created_at.asc())\
+        .all()
+
+    chat_data = []
+
+    for p in prompts:
+        chat_data.append({
+            "user": p.prompt_text,
+            "ai": p.response.result_text if p.response else ""
+        })
+
+    return jsonify(chat_data)
+
 @chat_bp.route("/prompt/stop", methods=["POST"])
 def stop_prompt():
     data = request.json
