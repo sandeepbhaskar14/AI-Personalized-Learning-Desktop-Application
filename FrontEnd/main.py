@@ -22,7 +22,8 @@ from services.handle_requests import (run_login,
                                       send_prompt,
                                       stop_prompt,
                                       load_chat_history,
-                                      on_chat_history_item_clicked)
+                                      on_chat_history_item_clicked,
+                                      _show_chat_context_menu)
 
 from ui_controllers.ui_functions import UIFunctions
 
@@ -118,6 +119,11 @@ class MainWindow(QMainWindow) :
                 color: white;
             }
         """)
+        
+        self.ui.chat_history.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.ui.chat_history.customContextMenuRequested.connect(
+            lambda pos: _show_chat_context_menu(self, pos)
+        )
     
         
     def keyPressEvent(self, event):

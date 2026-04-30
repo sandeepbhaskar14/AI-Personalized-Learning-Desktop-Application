@@ -80,14 +80,6 @@ class WorkerThread(QThread):
             except requests.exceptions.RequestException as e:
                 print(colored('Connection Error: Server not reachable', 'red'))
           
-              
-        # elif self.method == 'GET' and self.route == 'verify_token':
-        #     try:
-        #         response = requests.get('http://localhost:5000/verify_token', headers=self.headers)
-        #         self.data_fetched.emit(response.json())
-        #         print("Server responded with:", response.json())
-        #     except requests.exceptions.RequestException as e:
-        #         print(colored('Connection Error: Server not reachable', 'red'))
                 
         elif self.method == 'POST' and self.route == '/prompt/stream':
             try:
@@ -120,6 +112,29 @@ class WorkerThread(QThread):
                 chat_id = self.route.split('/', 1)[1]
                 response = requests.get(
                     f'http://localhost:5000/chat/{chat_id}',
+                    headers=self.headers
+                )
+                self.data_fetched.emit(response.json())
+            except requests.exceptions.RequestException as e:
+                print(colored(f'Connection Error: {e}', 'red'))
+                
+        elif self.method == 'DELETE' and self.route.startswith('chat/'):
+            try:
+                chat_id = self.route.split('/', 1)[1]
+                response = requests.delete(
+                    f'http://localhost:5000/chat/{chat_id}',
+                    headers=self.headers
+                )
+                self.data_fetched.emit(response.json())
+            except requests.exceptions.RequestException as e:
+                print(colored(f'Connection Error: {e}', 'red'))
+
+        elif self.method == 'PATCH' and self.route.startswith('chat/'):
+            try:
+                chat_id = self.route.split('/', 1)[1]
+                response = requests.patch(
+                    f'http://localhost:5000/chat/{chat_id}',
+                    json=self.data,
                     headers=self.headers
                 )
                 self.data_fetched.emit(response.json())
@@ -659,3 +674,155 @@ def _render_loaded_chat(self, response):
     # Resume this chat so new messages continue the same session
     self.current_chat_id = chat_id
     self.chat_area.scroll_to_bottom()
+    
+    
+# ── Rename / Delete via right-click context menu ──────────────────────────────
+
+def _show_chat_context_menu(self, position):
+    """Right-click context menu on a chat history item."""
+    from PyQt5.QtWidgets import QMenu, QAction, QInputDialog, QMessageBox
+
+    item = self.ui.chat_history.itemAt(position)
+    if not item:
+        return
+
+    chat_id = item.data(Qt.UserRole)
+    current_title = item.text()
+
+    menu = QMenu(self.ui.chat_history)
+    menu.setStyleSheet("""
+        QMenu {
+            background-color: rgb(43, 47, 58);
+            color: rgba(255, 255, 255, 200);
+            border: 1px solid rgba(255, 255, 255, 30);
+            border-radius: 6px;
+            padding: 4px;
+            font-family: 'Roboto';
+            font-size: 10pt;
+        }
+        QMenu::item {
+            padding: 8px 20px;
+            border-radius: 4px;
+        }
+        QMenu::item:selected {
+            background-color: rgb(55, 62, 76);
+            color: white;
+        }
+        QMenu::separator {
+            height: 1px;
+            background: rgba(255, 255, 255, 20);
+            margin: 3px 8px;
+        }
+    """)
+
+    rename_action = QAction("✏  Rename", self.ui.chat_history)
+    delete_action = QAction("🗑  Delete", self.ui.chat_history)
+
+    menu.addAction(rename_action)
+    menu.addSeparator()
+    menu.addAction(delete_action)
+
+    action = menu.exec_(self.ui.chat_history.mapToGlobal(position))
+
+    if action == rename_action:
+        _rename_chat_dialog(self, item, chat_id, current_title)
+    elif action == delete_action:
+        _delete_chat_confirm(self, item, chat_id)
+
+
+def _rename_chat_dialog(self, item, chat_id, current_title):
+    """Show inline input dialog to rename a chat."""
+    from PyQt5.QtWidgets import QInputDialog, QLineEdit
+
+    dialog = QInputDialog(self.ui.chat_history)
+    dialog.setWindowTitle("Rename Chat")
+    dialog.setLabelText("New name:")
+    dialog.setTextValue(current_title)
+    dialog.setStyleSheet("""
+        QInputDialog, QDialog {
+            background-color: rgb(35, 38, 47);
+        }
+        QLabel {
+            color: rgba(255, 255, 255, 180);
+            font-family: 'Roboto';
+            font-size: 10pt;
+        }
+        QLineEdit {
+            background-color: rgb(41, 44, 53);
+            color: white;
+            border: 2px solid rgb(85, 170, 255);
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-family: 'Roboto';
+            font-size: 10pt;
+        }
+        QPushButton {
+            background-color: rgb(48, 53, 65);
+            color: rgba(255, 255, 255, 200);
+            border: 1px solid rgba(255, 255, 255, 40);
+            border-radius: 6px;
+            padding: 6px 16px;
+            font-family: 'Roboto';
+            font-size: 9pt;
+            min-width: 70px;
+        }
+        QPushButton:hover {
+            background-color: rgb(55, 62, 76);
+            border: 1px solid rgb(85, 170, 255);
+            color: white;
+        }
+        QPushButton:default {
+            border: 1px solid rgb(85, 170, 255);
+        }
+    """)
+
+    ok = dialog.exec_()
+    new_title = dialog.textValue().strip()
+
+    if not ok or not new_title or new_title == current_title:
+        return
+
+    token = getattr(self, 'jwt_token', '')
+    headers = {"Authorization": f"Bearer {token}"}
+
+    self.rename_thread = WorkerThread(
+        {"title": new_title}, 'PATCH', f'chat/{chat_id}', headers=headers
+    )
+
+    def on_renamed(response):
+        if response.get('status_code') == 200:
+            item.setText(new_title)
+            item.setToolTip(new_title)
+
+    self.rename_thread.data_fetched.connect(on_renamed)
+    self.rename_thread.start()
+
+
+def _delete_chat_confirm(self, item, chat_id):
+    """Show confirmation dialog then delete the chat."""
+    from ui_controllers.show_confirm_dialog import ConfirmDialog
+    
+    dialog = ConfirmDialog()
+
+    if dialog.exec_() == QDialog.Accepted:
+        dialog.close()
+
+
+    token = getattr(self, 'jwt_token', '')
+    headers = {"Authorization": f"Bearer {token}"}
+
+    self.delete_thread = WorkerThread(
+        None, 'DELETE', f'chat/{chat_id}', headers=headers
+    )
+
+    def on_deleted(response):
+        if response.get('status_code') == 200:
+            row = self.ui.chat_history.row(item)
+            self.ui.chat_history.takeItem(row)
+
+            # If this was the active chat, reset to new chat state
+            if getattr(self, 'current_chat_id', None) == chat_id:
+                self.handle_new_chat()
+
+    self.delete_thread.data_fetched.connect(on_deleted)
+    self.delete_thread.start()

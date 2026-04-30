@@ -165,3 +165,45 @@ def stream_prompt():
     #     db.session.commit()
 
     #     return jsonify({"error": str(e), "status_code": 500})
+    
+    
+@chat_bp.route("/chat/<chat_id>", methods=["DELETE"])
+def delete_chat(chat_id):
+    user_id, error_response, status_code = verify_token()
+    if status_code in (401, 403):
+        return jsonify({"message": "Unauthorized", "status_code": status_code})
+
+    chat = Chat.query.filter_by(chat_id=chat_id, user_id=user_id).first()
+    if not chat:
+        return jsonify({"message": "Chat not found", "status_code": 404})
+
+    # Delete all prompts (and their responses via cascade) for this chat
+    prompts = Prompt.query.filter_by(chat_id=chat_id, user_id=user_id).all()
+    for prompt in prompts:
+        db.session.delete(prompt)
+
+    db.session.delete(chat)
+    db.session.commit()
+
+    return jsonify({"message": "Chat deleted", "status_code": 200})
+
+
+@chat_bp.route("/chat/<chat_id>", methods=["PATCH"])
+def rename_chat(chat_id):
+    user_id, error_response, status_code = verify_token()
+    if status_code in (401, 403):
+        return jsonify({"message": "Unauthorized", "status_code": status_code})
+
+    chat = Chat.query.filter_by(chat_id=chat_id, user_id=user_id).first()
+    if not chat:
+        return jsonify({"message": "Chat not found", "status_code": 404})
+
+    data = request.json
+    new_title = data.get("title", "").strip()
+    if not new_title:
+        return jsonify({"message": "Title cannot be empty", "status_code": 400})
+
+    chat.title = new_title[:100]
+    db.session.commit()
+
+    return jsonify({"message": "Chat renamed", "status_code": 200})

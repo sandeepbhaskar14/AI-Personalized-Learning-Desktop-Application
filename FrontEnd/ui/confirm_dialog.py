@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'message.ui'
+# Form implementation generated from reading ui file 'confirm_dialog.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.9
 #
@@ -14,7 +14,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
-        Dialog.resize(600, 180)
+        Dialog.resize(550, 180)
         self.drop_shadow_frame = QtWidgets.QFrame(Dialog)
         self.drop_shadow_frame.setGeometry(QtCore.QRect(10, 10, 578, 158))
         self.drop_shadow_frame.setStyleSheet("background-color: rgb(27, 29, 35);\n"
@@ -37,7 +37,7 @@ class Ui_Dialog(object):
 "}")
         self.msg.setObjectName("msg")
         self.btn_ok = QtWidgets.QPushButton(self.drop_shadow_frame)
-        self.btn_ok.setGeometry(QtCore.QRect(430, 100, 91, 31))
+        self.btn_ok.setGeometry(QtCore.QRect(280, 110, 91, 31))
         font = QtGui.QFont()
         font.setFamily("Roboto")
         font.setPointSize(9)
@@ -62,9 +62,30 @@ class Ui_Dialog(object):
         font.setFamily("Roboto Medium")
         font.setPointSize(10)
         self.info.setFont(font)
-        self.info.setStyleSheet("color:rgba(255, 255, 255, 180);")
+        self.info.setStyleSheet("color:rgba(255, 255, 255, 180);\n"
+"padding-right:100px;")
         self.info.setAlignment(QtCore.Qt.AlignCenter)
         self.info.setObjectName("info")
+        self.btn_cancel = QtWidgets.QPushButton(self.drop_shadow_frame)
+        self.btn_cancel.setGeometry(QtCore.QRect(390, 110, 91, 31))
+        font = QtGui.QFont()
+        font.setFamily("Roboto")
+        font.setPointSize(9)
+        self.btn_cancel.setFont(font)
+        self.btn_cancel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btn_cancel.setStyleSheet("QPushButton{\n"
+"      border-radius:12px;\n"
+"      /*border:2px solid rgb(41, 44, 53);*/\n"
+"      border:2px solid rgb(58, 175, 175);\n"
+"      background-color:rgb(34,36,44);\n"
+"      color:rgba(255, 255, 255, 180);\n"
+"      font-size:9pt;\n"
+"}\n"
+"QPushButton:hover{\n"
+"      /*border:2px solid rgb(114, 254, 120); */\n"
+"    border: 2px solid rgb(231, 0, 116);\n"
+"}")
+        self.btn_cancel.setObjectName("btn_cancel")
 
         self.retranslateUi(Dialog)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
@@ -72,8 +93,9 @@ class Ui_Dialog(object):
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
         Dialog.setWindowTitle(_translate("Dialog", "Dialog"))
-        self.msg.setText(_translate("Dialog", "Message from Server"))
+        self.msg.setText(_translate("Dialog", "Delete Chat"))
         self.btn_ok.setText(_translate("Dialog", "Ok"))
-        self.info.setText(_translate("Dialog", "User Preferences updated successfully"))
+        self.info.setText(_translate("Dialog", "This cannot be undone. Are you sure?"))
+        self.btn_cancel.setText(_translate("Dialog", "Cancel"))
 
 
