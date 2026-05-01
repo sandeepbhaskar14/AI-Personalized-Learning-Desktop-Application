@@ -1,3 +1,4 @@
+import os
 import time
 
 from dotenv import load_dotenv
@@ -19,7 +20,7 @@ load_dotenv()
 llm = ChatOpenAI(
     model="openai/gpt-4o-mini",
     base_url="https://openrouter.ai/api/v1",
-    api_key="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",
+    api_key=os.getenv("OPENROUTER_API_KEY"),
     temperature=0.7,
     model_kwargs={
         "extra_body":{
@@ -30,14 +31,6 @@ llm = ChatOpenAI(
     },
     streaming=True
 )
-
-
-#  Secure config
-# llm = ChatOpenAI(
-#     model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
-#     api_key=os.getenv("OPENAI_API_KEY"),
-#     temperature=0.7
-# )
 
 # -------------------------------
 # PROMPTS
@@ -74,6 +67,7 @@ def stream_ai_response(prompt, chat_id, text, task, difficulty, style):
                 break  # Stop yielding
             
             token = chunk.content
+            print(token)
             if token:
                 full_text += token
                 encoded = token.replace("\n", "<<NEWLINE>>")

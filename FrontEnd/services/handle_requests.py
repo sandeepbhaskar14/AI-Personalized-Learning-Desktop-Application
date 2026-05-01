@@ -481,6 +481,8 @@ def get_prompt_stream(self, chunk):
     if not hasattr(self, "full_text"):
         self.full_text = ""
 
+    # print(colored(chunk, 'green'), end='')
+    
     self.full_text += chunk.replace("<<NEWLINE>>", "\n")
 
     # Update bubble text (throttled internally by QTimer)
@@ -517,6 +519,10 @@ def stop_prompt(self):
     chat_id = getattr(self, 'current_chat_id', None)
     if not chat_id:
         return
+    
+    # Mark as stopped so finalize_stream (fired by thread.finished) is a no-op
+    self._stream_stopped = True
+
 
     headers = {}
     token = getattr(self, 'jwt_token', '')
