@@ -67,7 +67,6 @@ def stream_ai_response(prompt, chat_id, text, task, difficulty, style):
                 break  # Stop yielding
             
             token = chunk.content
-            print(token)
             if token:
                 full_text += token
                 encoded = token.replace("\n", "<<NEWLINE>>")

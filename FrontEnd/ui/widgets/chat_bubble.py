@@ -2,7 +2,7 @@ from PyQt5.QtWidgets import (QWidget, QHBoxLayout, QVBoxLayout,
                               QFrame, QSizePolicy, QTextBrowser,
                               QScrollArea)
 from PyQt5.QtCore import Qt, QTimer
-from PyQt5.QtGui import QFont, QFontMetrics
+from PyQt5.QtGui import QFont, QTextDocument
 import markdown
 from markdown.extensions.codehilite import CodeHiliteExtension
 from markdown.extensions.fenced_code import FencedCodeExtension
@@ -176,32 +176,37 @@ class ChatBubble(QWidget):
 
     def _set_user_height_with_width(self, text, container_width):
         """
-        Calculate user bubble height given a known container width.
-        MAX_BUBBLE=550, subtract all padding layers to get inner text width.
+        Calculate user bubble height using QTextDocument — same engine
+        Qt uses to actually render — so the result is pixel-perfect.
 
-        container_width: the QScrollArea viewport width (most accurate)
-                         or chat_area.width() (fallback)
+        Padding layers from container_width to inner text width:
+          outer QHBoxLayout margins  left=10, right=10  → 20
+          bubble QVBoxLayout padding left=12, right=12  → 24
+          QTextBrowser doc margin    2+2                → 4
+          safety buffer                                 → 4
+          Total                                         → 52
+        Bubble frame adds top=10, bottom=10 padding     → 20
         """
-        MAX_BUBBLE = 550
-        # Layers subtracted from container_width to reach inner text area:
-        #   outer QHBoxLayout margins: left=10, right=10  → 20
-        #   bubble QVBoxLayout padding: left=12, right=12  → 24
-        #   QTextBrowser doc margin: 2+2                   → 4
-        #   safety buffer                                   → 4
-        # Total: 52
-        TOTAL_PADDING = 52
+        MAX_BUBBLE   = 550
+        TOTAL_PADDING = 52          # container → inner text width
+        BUBBLE_VPAD   = 20          # bubble QVBoxLayout top+bottom margins
+        LABEL_EXTRA   = 4           # small rounding buffer for the label
 
         bubble_w = min(container_width, MAX_BUBBLE)
         inner_w  = max(bubble_w - TOTAL_PADDING, 60)
 
-        fm   = QFontMetrics(self._FONT)
-        rect = fm.boundingRect(
-            0, 0, inner_w, 100_000,
-            Qt.TextWordWrap | Qt.AlignLeft,
-            text
-        )
-        new_h = max(36, rect.height() + fm.lineSpacing())
-        self.label.setFixedHeight(new_h)
+        # Use QTextDocument so word-wrap & font metrics exactly match Qt's renderer
+        doc = QTextDocument()
+        doc.setDefaultFont(self._FONT)
+        doc.setPlainText(text)
+        doc.setTextWidth(inner_w)
+
+        doc_h    = int(doc.size().height())
+        label_h  = max(36, doc_h + LABEL_EXTRA)
+        bubble_h = label_h + BUBBLE_VPAD           # label + top/bottom padding
+
+        self.label.setFixedHeight(label_h)
+        self.bubble.setFixedHeight(bubble_h)
         self.updateGeometry()
 
     # ── showEvent: widget is now painted, real geometry available ──────

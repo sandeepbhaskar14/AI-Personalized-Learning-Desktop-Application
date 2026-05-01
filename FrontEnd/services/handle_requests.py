@@ -480,8 +480,6 @@ def get_user_preferences(self):
 def get_prompt_stream(self, chunk):    
     if not hasattr(self, "full_text"):
         self.full_text = ""
-
-    # print(colored(chunk, 'green'), end='')
     
     self.full_text += chunk.replace("<<NEWLINE>>", "\n")
 
@@ -500,17 +498,23 @@ def _do_scroll(self):
 
 
 def finalize_stream(self):
+    # If stop_prompt already handled the finalization, just clean up and return.
+    if getattr(self, '_stream_stopped', False):
+        self._stream_stopped = False
+        load_chat_history(self)
+        return
+
     self._is_streaming = False
     if hasattr(self, 'full_text') and self.full_text:
         self.ai_bubble.finish_stream(self.full_text)
     self._scroll_pending = False
     self.chat_area.scroll_to_bottom()
-    
-    stop_icon = QtGui.QIcon()
-    stop_icon.addPixmap(QtGui.QPixmap("Reqs/search.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-    self.ui.searchButton_2.setIcon(stop_icon)
+
+    search_icon = QtGui.QIcon()
+    search_icon.addPixmap(QtGui.QPixmap("Reqs/search.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+    self.ui.searchButton_2.setIcon(search_icon)
     self.ui.searchButton_2.setIconSize(QSize(27, 27))
-    
+
     load_chat_history(self)
 
 
@@ -544,8 +548,21 @@ def stop_prompt(self):
 
 
 def _on_stream_stopped(self):
-    # self.ui.searchButton.setIcon(...)   # restore search icon
-    self.ui.searchButton_2.setIcon(QIcon('/Reqs/search.png')) # restore search icon
+    """Finalize bubble with partial text and restore the search icon."""
+    self._is_streaming = False
+    self._scroll_pending = False
+
+    # Render whatever we received so far as proper markdown
+    if hasattr(self, 'full_text') and self.full_text:
+        self.ai_bubble.finish_stream(self.full_text)
+
+    self.chat_area.scroll_to_bottom()
+
+    # Restore search icon
+    search_icon = QtGui.QIcon()
+    search_icon.addPixmap(QtGui.QPixmap("Reqs/search.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+    self.ui.searchButton_2.setIcon(search_icon)
+    self.ui.searchButton_2.setIconSize(QSize(27, 27))
 
 
 def send_prompt(self):
