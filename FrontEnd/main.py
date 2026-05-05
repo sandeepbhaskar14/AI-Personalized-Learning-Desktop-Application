@@ -38,11 +38,35 @@ class MainWindow(QMainWindow) :
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
         
+        self.ui.frame_2.setMinimumHeight(60)
+        self.ui.frame_2.setMaximumHeight(16777215)
+    
+ 
+        self.ui.verticalLayout_18.setContentsMargins(0, 0, 0, 12)
+        
+        self.ui.addButton.clicked.connect(
+            lambda: open_document(self)
+        )
+
+        self.ui.addButton_2.clicked.connect(
+            lambda: open_document(self)
+        )
+        
         self.chat_area = ChatArea()
         self.ui.chat_layout.addWidget(self.chat_area)
         
         self.ui_functions = UIFunctions(self)
         self.ui_functions.uiDefinitions()
+        
+        # Release the hardcoded 150 px lock on the conversation-page input frame
+        self.ui.frame_2.setMinimumHeight(60)
+        self.ui.frame_2.setMaximumHeight(16777215)  
+        
+        # Remove the maxHeight lock on the text_prompt_2
+        self.ui.text_prompt_2.setMaximumHeight(16777215)
+        self.ui.text_prompt.setMaximumHeight(16777215)
+        
+        
         
         # No document attached at startup
         self.attached_document = None
@@ -83,7 +107,7 @@ class MainWindow(QMainWindow) :
 
         # ==>> Move Window
         self.ui.status_bar.mouseMoveEvent = MoveWindow 
-
+        
 
         # ==>> Page toggle and Strips color function calling
         self.ui.toggle_button.clicked.connect(lambda: self.ui_functions.toggle(275, True))

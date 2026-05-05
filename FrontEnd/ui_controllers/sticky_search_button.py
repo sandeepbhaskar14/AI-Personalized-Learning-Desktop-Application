@@ -4,51 +4,69 @@ from PyQt5.QtCore import QObject, QEvent
 
 class StickyButton(QPushButton):
     """
-    Generic sticky button for QTextEdit.
-    Supports bottom-left and bottom-right anchoring.
+    A QPushButton anchored to a corner of an AutoGrowTextEdit (or any QWidget).
+
+    Anchors
+    -------
+    'bottom-right'  – sits inside the right edge, aligned to the bottom row.
+    'bottom-left'   – same on the left edge.
+
+    The button repositions itself on:
+      • QEvent.Resize / QEvent.Move on the target widget
+      • total_height_changed signal  (AutoGrowTextEdit)
     """
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        self._widget  = None
+        self._margin  = 8
+        self._anchor  = "bottom-right"
+        self.setFixedSize(45, 45)
 
-        self._text_edit = None
-        self._margin = 4
-        self._anchor = "bottom-right"  # default
+    # ── Public API ─────────────────────────────────────────────────────────────
 
-        self.setFixedSize(48, 48)
+    def setTextEdit(self, widget):
+        """Attach to an AutoGrowTextEdit (or plain QTextEdit / QWidget)."""
+        self._widget = widget
+        widget.installEventFilter(self)
 
-    def setTextEdit(self, text_edit):
-        self._text_edit = text_edit
-        text_edit.installEventFilter(self)
+        # Subscribe to the composite widget's height signal if available
+        if hasattr(widget, "total_height_changed"):
+            widget.total_height_changed.connect(self._on_height_changed)
+
         self.update_position()
 
     def setAnchor(self, anchor: str):
-        """
-        anchor: 'bottom-right' or 'bottom-left'
-        """
+        """anchor: 'bottom-right' | 'bottom-left'"""
         self._anchor = anchor
         self.update_position()
 
+    # ── Event filter ──────────────────────────────────────────────────────────
+
     def eventFilter(self, obj: QObject, event: QEvent):
-        if obj == self._text_edit and event.type() == QEvent.Resize:
+        if obj is self._widget and event.type() in (QEvent.Resize, QEvent.Move):
             self.update_position()
         return super().eventFilter(obj, event)
 
+    def _on_height_changed(self, _: int):
+        self.update_position()
+
+    # ── Position calculation ───────────────────────────────────────────────────
+
     def update_position(self):
-        if not self._text_edit:
+        if self._widget is None:
             return
 
-        te = self._text_edit
+        w   = self._widget
         btn = self
 
-        # Vertical position (same for both)
-        y = te.y() + te.height() - btn.height() - self._margin
+        # Bottom of the widget — stays fixed as widget grows upward
+        y = w.y() + w.height() - btn.height() - self._margin
 
-        # Horizontal position depends on anchor
         if self._anchor == "bottom-left":
-            x = te.x() + self._margin
-        else:  # bottom-right
-            x = te.x() + te.width() - btn.width() - self._margin
+            x = w.x() + self._margin
+        else:
+            x = w.x() + w.width() - btn.width() - self._margin
 
         btn.move(x, y)
         btn.raise_()

@@ -294,16 +294,43 @@ def open_document(self):
  
     filename = os.path.basename(path)
  
-    # Store on the window
+    IMAGE_EXTS = {".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp"}
+
+    ext = os.path.splitext(path)[1].lower()
+    is_image = ext in IMAGE_EXTS
+
+    pixmap = None
+    if is_image:
+        from PyQt5.QtGui import QPixmap
+
+        pixmap = QPixmap(path)
+
+        if pixmap.isNull():
+            pixmap = None
+
+
     self.attached_document = {
         "filename": filename,
         "text": text,
         "truncated": truncated,
+        "is_image": is_image,
+        "pixmap": pixmap,
     }
- 
-    print(colored(f"Document attached: {filename} ({len(text)} chars)", "cyan"))
- 
-    # Update both add-buttons to show the attachment
+
+
+    # Show chip in both text boxes
+    for te in (self.ui.text_prompt, self.ui.text_prompt_2):
+        te.set_attachment(self.attached_document)
+
+
+    print(
+        colored(
+            f"Document attached: {filename} ({len(text)} chars)",
+            "cyan"
+        )
+    )
+
+    # Keep existing button style/tooltip
     _set_attach_button_active(self, filename)
  
     if truncated:
@@ -318,6 +345,10 @@ def open_document(self):
 def clear_document(self):
     """Remove the currently attached document and reset button icons."""
     self.attached_document = None
+
+    for te in (self.ui.text_prompt, self.ui.text_prompt_2):
+        te.set_attachment(None)
+
     _set_attach_button_inactive(self)
     print(colored("Document detached", "yellow"))
  
@@ -786,7 +817,10 @@ def send_prompt(self):
         return
 
     self.ui.text_prompt.clear()
+    self.ui.text_prompt.reset_height()
+
     self.ui.text_prompt_2.clear()
+    self.ui.text_prompt_2.reset_height()
 
     self._is_streaming = True
 

@@ -107,13 +107,14 @@ def _get_scroll_area_viewport_width(widget):
 class ChatBubble(QWidget):
     _FONT = QFont("Roboto", 10)
 
-    def __init__(self, text="", is_user=False, available_width=800):
+    def __init__(self, text="", is_user=False, available_width=800, attachment=None):
         super().__init__()
         self.is_user = is_user
         self._available_width = available_width  # fallback only
         self._user_text = text if is_user else ""
         self._shown_once = False
         self._streaming = False
+        self._attachment = attachment
 
         self._height_timer = QTimer(self)
         self._height_timer.setSingleShot(True)
@@ -140,7 +141,6 @@ class ChatBubble(QWidget):
         self.label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
         self.label.setMinimumHeight(36)
         self.label.document().setDocumentMargin(2)
-        bubble_layout.addWidget(self.label)
 
         if is_user:
             self.bubble.setStyleSheet(
@@ -155,7 +155,150 @@ class ChatBubble(QWidget):
             outer.addWidget(self.bubble, 0)
             self.bubble.setMaximumWidth(550)
             # self.bubble.setMaximumHeight(50)
+            
+            if self._attachment:
+                import os as _os
 
+                from PyQt5.QtWidgets import (
+                    QFrame as _QF,
+                    QHBoxLayout as _HL,
+                    QLabel as _QL
+                )
+
+                from PyQt5.QtGui import (
+                    QPixmap as _QP,
+                    QPainter as _QP2,
+                    QPainterPath as _QPP
+                )
+
+                chip = _QF()
+
+                chip.setStyleSheet("""
+                    QFrame {
+                        background-color: rgba(255,255,255,15);
+                        border-radius: 10px;
+                        border: none;
+                    }
+                """)
+
+                chip_row = _HL(chip)
+
+                chip_row.setContentsMargins(
+                    8,
+                    5,
+                    10,
+                    5
+                )
+
+                chip_row.setSpacing(8)
+
+                th = _QL()
+
+                th.setAlignment(Qt.AlignCenter)
+
+                px = self._attachment.get("pixmap")
+
+                if px and not px.isNull():
+
+                    scaled = px.scaled(
+                        56,
+                        42,
+                        Qt.KeepAspectRatio,
+                        Qt.SmoothTransformation
+                    )
+
+                    res = _QP(scaled.size())
+
+                    res.fill(Qt.transparent)
+
+                    ptr = _QP2(res)
+
+                    ptr.setRenderHint(
+                        _QP2.Antialiasing
+                    )
+
+                    pth = _QPP()
+
+                    pth.addRoundedRect(
+                        0,
+                        0,
+                        scaled.width(),
+                        scaled.height(),
+                        6,
+                        6
+                    )
+
+                    ptr.setClipPath(pth)
+
+                    ptr.drawPixmap(
+                        0,
+                        0,
+                        scaled
+                    )
+
+                    ptr.end()
+
+                    th.setPixmap(res)
+
+                    th.setFixedSize(
+                        56,
+                        42
+                    )
+
+                else:
+
+                    ext_t = _os.path.splitext(
+                        self._attachment["filename"]
+                    )[1].upper().lstrip('.') or "FILE"
+
+                    th.setText(ext_t)
+
+                    th.setFixedSize(
+                        40,
+                        34
+                    )
+
+                    th.setStyleSheet("""
+                        background-color: rgba(255,255,255,25);
+                        border-radius: 6px;
+                        color: white;
+                        font-size: 9px;
+                        font-family: 'Roboto';
+                        font-weight: bold;
+                    """)
+
+                chip_row.addWidget(th)
+
+                fn = _QL()
+
+                fn.setStyleSheet("""
+                    color: rgba(255,255,255,200);
+                    font-family: 'Roboto';
+                    font-size: 9pt;
+                    background: transparent;
+                    border: none;
+                """)
+
+                fn.setText(
+                    fn.fontMetrics().elidedText(
+                        self._attachment["filename"],
+                        Qt.ElideMiddle,
+                        200
+                    )
+                )
+
+                fn.setToolTip(
+                    self._attachment["filename"]
+                )
+
+                chip_row.addWidget(fn)
+
+                chip_row.addStretch()
+
+                bubble_layout.addWidget(chip)
+
+
+            bubble_layout.addWidget(self.label)
             if text:
                 self.label.setPlainText(text)
                 # Set a safe initial height — will be corrected in showEvent
