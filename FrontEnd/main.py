@@ -20,6 +20,7 @@ from services.handle_requests import (run_login,
                                       save_user_preferences, 
                                       get_user_preferences, 
                                       send_prompt,
+                                      open_document,
                                       stop_prompt,
                                       load_chat_history,
                                       on_chat_history_item_clicked,
@@ -43,13 +44,21 @@ class MainWindow(QMainWindow) :
         self.ui_functions = UIFunctions(self)
         self.ui_functions.uiDefinitions()
         
+        # No document attached at startup
+        self.attached_document = None
+        
 
-        # Attach button to text edit
+        # Attach search/add buttons to text edits (sticky positioning)
         self.ui.searchButton.setTextEdit(self.ui.text_prompt)
         self.ui.searchButton.setAnchor("bottom-right")
 
         self.ui.addButton.setTextEdit(self.ui.text_prompt)
         self.ui.addButton.setAnchor("bottom-left")
+        
+        # Set initial tooltip for add buttons
+        self.ui.addButton.setToolTip("Attach a document")
+        self.ui.addButton_2.setToolTip("Attach a document")
+        
         
         # "Recent chats" label set hidden initially
         self.ui.label_7.setVisible(False)
@@ -57,7 +66,7 @@ class MainWindow(QMainWindow) :
         # The chat history list set hidden initialy
         self.ui.chat_history.setVisible(False)
         
-        # update preferences onle when user is logged in
+        # update preferences only when user is logged in
         self.ui.button_save.setEnabled(False)
         
         def MoveWindow(event) :
@@ -94,6 +103,14 @@ class MainWindow(QMainWindow) :
     
         # self.ui.searchButton.clicked.connect(lambda: self._handle_search_or_stop())
         self.ui.searchButton_2.clicked.connect(lambda: self._handle_search_or_stop())
+        
+        # ── Document attachment buttons ──────────────────────────────────
+        # self.ui.searchButton.clicked.connect(lambda: self._handle_search_or_stop())
+        self.ui.addButton.clicked.connect(lambda: open_document(self))
+        self.ui.searchButton_2.clicked.connect(lambda: self._handle_search_or_stop())
+        self.ui.addButton_2.clicked.connect(lambda: open_document(self))
+        
+        # ────────────────────────────────────────────────────────────────
         
         self.ui.chat_history.itemClicked.connect(lambda item: on_chat_history_item_clicked(self, item))
         
@@ -187,6 +204,11 @@ class MainWindow(QMainWindow) :
             del self.full_text
 
         self._scroll_pending = False
+        
+        # Also clear any attached document when starting a new chat
+        self.attached_document = None
+        from services.handle_requests import _set_attach_button_inactive
+        _set_attach_button_inactive(self)
         
     def _handle_search_or_stop(self):
         """Toggle: if streaming → stop, else → send."""

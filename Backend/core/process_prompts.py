@@ -93,6 +93,9 @@ def stream_prompt():
     prompt_text = data.get("prompt_text")
     prompt_type = data.get("prompt_type")
     chat_id = data.get("chat_id")
+    # ── Document fields (optional) ────────────────────────────────────
+    document_text = data.get("document_text")   # may be None
+    document_name = data.get("document_name")   # may be None
 
     if not prompt_text or not prompt_type:
         return jsonify({"error": "Invalid input"}), 400
@@ -158,7 +161,9 @@ def stream_prompt():
         prompt_text,
         prompt_type,
         difficulty,
-        learning_style
+        learning_style,
+        document_text=document_text,   # ← passed through
+        document_name=document_name,   # ← passed through
     )
     # except Exception as e:
     #     prompt.status = "failed"

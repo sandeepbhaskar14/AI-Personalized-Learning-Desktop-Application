@@ -1,11 +1,11 @@
 from PyQt5.QtCore import QThread, pyqtSignal, pyqtSlot, QTimer, QSize, Qt
-from PyQt5.QtWidgets import QDialog
+from PyQt5.QtWidgets import QDialog, QFileDialog, QMessageBox
 from PyQt5.QtGui import QIcon
 from PyQt5 import QtGui, QtWidgets
 
 
 from termcolor import colored
-import subprocess, re
+import subprocess, re, os
 import requests
 
 import uuid
@@ -164,6 +164,203 @@ def verify_token(self):
     self.thread.data_fetched.connect(lambda response: get_token_verification(self, response))
     self.thread.start()
 '''
+
+# ── Document extraction helpers ───────────────────────────────────────────────
+ 
+def _extract_text_from_pdf(path: str) -> str:
+    """Extract text from a PDF file using PyMuPDF (fitz) or pdfplumber as fallback."""
+    text = ""
+    try:
+        import fitz  # PyMuPDF
+        doc = fitz.open(path)
+        for page in doc:
+            text += page.get_text()
+        doc.close()
+        return text.strip()
+    except ImportError:
+        pass
+ 
+    try:
+        import fitz  # PyMuPDF
+
+        text = ""
+        with fitz.open(path) as pdf:
+            for page in pdf:
+                page_text = page.get_text()
+                if page_text:
+                    text += page_text + "\n"
+
+        return text.strip()
+
+    except ImportError:
+        pass
+ 
+    raise ImportError(
+        "PDF reading requires either PyMuPDF or pdfplumber.\n"
+        "Install one with:\n  pip install pymupdf\nor\n  pip install pdfplumber"
+    )
+ 
+ 
+def _extract_text_from_docx(path: str) -> str:
+    """Extract text from a .docx file using python-docx."""
+    try:
+        from docx import Document
+        doc = Document(path)
+        return "\n".join(p.text for p in doc.paragraphs if p.text.strip())
+    except ImportError:
+        raise ImportError(
+            "DOCX reading requires python-docx.\n"
+            "Install it with:  pip install python-docx"
+        )
+ 
+ 
+def _extract_text_from_file(path: str) -> str:
+    """Dispatch to the correct extractor based on file extension."""
+    ext = os.path.splitext(path)[1].lower()
+    if ext == ".pdf":
+        return _extract_text_from_pdf(path)
+    elif ext in (".docx", ".doc"):
+        return _extract_text_from_docx(path)
+    elif ext in (".txt", ".md", ".csv", ".py", ".js", ".ts", ".html",
+                  ".css", ".json", ".xml", ".yaml", ".yml", ".rst"):
+        with open(path, "r", encoding="utf-8", errors="ignore") as f:
+            return f.read()
+    else:
+        raise ValueError(f"Unsupported file type: {ext}")
+ 
+ 
+# ── Document open / clear ─────────────────────────────────────────────────────
+ 
+# Supported file types for the file dialog
+_SUPPORTED_FILTERS = (
+    "Documents (*.pdf *.docx *.doc *.txt *.md *.csv "
+    "*.py *.js *.ts *.html *.css *.json *.xml *.yaml *.yml *.rst);;"
+    "PDF Files (*.pdf);;"
+    "Word Documents (*.docx *.doc);;"
+    "Text Files (*.txt *.md *.csv);;"
+    "Code Files (*.py *.js *.ts *.html *.css *.json *.xml *.yaml *.yml *.rst);;"
+    "All Files (*)"
+)
+ 
+_ADD_ICON_PATH    = "Reqs/add_icon.png"
+_ATTACH_ICON_PATH = "Reqs/add_icon.png"   # swap to a paperclip icon if you have one
+ 
+ 
+def open_document(self):
+    """
+    Open a file dialog, extract text from the chosen document,
+    and store it on the window for the next prompt submission.
+    If a document is already attached, clicking the button removes it.
+    """
+    # --- Toggle: if already attached, clear it ---
+    if getattr(self, 'attached_document', None):
+        clear_document(self)
+        return
+ 
+    path, _ = QFileDialog.getOpenFileName(
+        self,
+        "Attach a Document",
+        "",
+        _SUPPORTED_FILTERS
+    )
+ 
+    if not path:
+        return  # user cancelled
+ 
+    try:
+        text = _extract_text_from_file(path)
+    except (ImportError, ValueError, Exception) as e:
+        QMessageBox.critical(
+            self,
+            "Document Error",
+            f"Could not read the file:\n\n{e}"
+        )
+        return
+ 
+    if not text.strip():
+        QMessageBox.warning(
+            self,
+            "Empty Document",
+            "The selected file appears to be empty or contains no readable text."
+        )
+        return
+ 
+    # Truncate very large documents to avoid token overflow (≈ 12 000 chars ≈ 3 000 tokens)
+    MAX_CHARS = 12_000
+    truncated = False
+    if len(text) > MAX_CHARS:
+        text = text[:MAX_CHARS]
+        truncated = True
+ 
+    filename = os.path.basename(path)
+ 
+    # Store on the window
+    self.attached_document = {
+        "filename": filename,
+        "text": text,
+        "truncated": truncated,
+    }
+ 
+    print(colored(f"Document attached: {filename} ({len(text)} chars)", "cyan"))
+ 
+    # Update both add-buttons to show the attachment
+    _set_attach_button_active(self, filename)
+ 
+    if truncated:
+        QMessageBox.information(
+            self,
+            "Document Truncated",
+            f"'{filename}' is large and has been truncated to the first "
+            f"{MAX_CHARS:,} characters to fit within the AI context window."
+        )
+ 
+ 
+def clear_document(self):
+    """Remove the currently attached document and reset button icons."""
+    self.attached_document = None
+    _set_attach_button_inactive(self)
+    print(colored("Document detached", "yellow"))
+ 
+ 
+def _set_attach_button_active(self, filename: str):
+    """Tint / re-label both add-buttons to indicate an attachment is loaded."""
+    tooltip = f"📎 {filename}\n(click to remove)"
+    active_style = """
+        QPushButton {
+            background: none;
+            border: 2px solid rgb(85, 170, 255);
+            color: rgb(85, 170, 255);
+            border-radius: 21px;
+            margin-top: 3px;
+        }
+        QPushButton:hover {
+            background-color: rgba(85, 170, 255, 30);
+            border-color: rgb(231, 0, 116);
+        }
+    """
+    for btn in (self.ui.addButton, self.ui.addButton_2):
+        btn.setStyleSheet(active_style)
+        btn.setToolTip(tooltip)
+ 
+ 
+def _set_attach_button_inactive(self):
+    """Restore both add-buttons to their default style."""
+    default_style = """
+        QPushButton {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 180);
+            border-radius: 21px;
+            margin-top: 3px;
+        }
+        QPushButton:hover {
+            background-color: rgb(45, 48, 58);
+        }
+    """
+    for btn in (self.ui.addButton, self.ui.addButton_2):
+        btn.setStyleSheet(default_style)
+        btn.setToolTip("Attach a document")
+ 
                 
 def signup_update_ui(self):
     self.ui.signup_button.setEnabled(True)
@@ -514,6 +711,10 @@ def finalize_stream(self):
     search_icon.addPixmap(QtGui.QPixmap("Reqs/search.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
     self.ui.searchButton_2.setIcon(search_icon)
     self.ui.searchButton_2.setIconSize(QSize(27, 27))
+    
+    # Clear attached document after a successful send
+    clear_document(self)
+
 
     load_chat_history(self)
 
@@ -563,6 +764,9 @@ def _on_stream_stopped(self):
     search_icon.addPixmap(QtGui.QPixmap("Reqs/search.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
     self.ui.searchButton_2.setIcon(search_icon)
     self.ui.searchButton_2.setIconSize(QSize(27, 27))
+    
+    # Clear attached document on stop too
+    clear_document(self)
 
 
 def send_prompt(self):
@@ -599,18 +803,32 @@ def send_prompt(self):
         self.current_chat_id = str(uuid.uuid4())
 
     chat_width = self.chat_area.width()
+    
+    # ── Build display text for the user bubble ──────────────────────────
+    doc = getattr(self, 'attached_document', None)
+    if doc:
+        display_text = f"📎 {doc['filename']}\n\n{text}"
+    else:
+        display_text = text
+        
     user_bubble = ChatBubble(text, is_user=True, available_width=chat_width)
     self.chat_area.add_bubble(user_bubble)
 
     self.ai_bubble = ChatBubble("", is_user=False, available_width=chat_width)
     self.ai_bubble.start_stream()
     self.chat_area.add_bubble(self.ai_bubble)
+    
+    # ── Build payload — include document_text if present ────────────────
 
     payload = {
         "prompt_text": text,
         "prompt_type": self.ui.preferred_output.currentText().lower(),
         "chat_id": self.current_chat_id,
     }
+    
+    if doc:
+        payload["document_text"] = doc["text"]
+        payload["document_name"] = doc["filename"]
 
     subprocess.run(["icacls", "auth_token.x", "/remove:d", "Everyone"], check=True)
     with open('auth_token.x', 'r', encoding='utf-8') as f:
@@ -738,6 +956,7 @@ def _show_chat_context_menu(self, position):
         }
     """)
 
+    from PyQt5.QtWidgets import QAction
     rename_action = QAction("✏  Rename", self.ui.chat_history)
     delete_action = QAction("🗑  Delete", self.ui.chat_history)
 
