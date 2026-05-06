@@ -47,17 +47,17 @@ class MainWindow(QMainWindow) :
         self.ui.searchButton_2.hide()
  
         # ── Unlock conversation-page input frame ───────────────────────────────
-        self.ui.frame_2.setMinimumHeight(60)
+        self.ui.frame_2.setMinimumHeight(120)
         self.ui.frame_2.setMaximumHeight(16777215)
         self.ui.text_prompt.setMaximumHeight(16777215)
         self.ui.text_prompt_2.setMaximumHeight(16777215)
  
         # Add bottom margin so the input isn't flush with the window edge
-        self.ui.verticalLayout_18.setContentsMargins(0, 0, 0, 12)
+        self.ui.verticalLayout_18.setContentsMargins(0, 0, 0, 14)
  
         # Grow conversation input upward: frame_2 height tracks text_prompt_2
         def _on_conv_input_h(h: int):
-            self.ui.frame_2.setFixedHeight(h + 16)
+            self.ui.frame_2.setFixedHeight(h + 62)
         self.ui.text_prompt_2.height_changed.connect(_on_conv_input_h)
  
         # ── Chat area ──────────────────────────────────────────────────────────
