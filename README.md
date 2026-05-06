@@ -58,55 +58,16 @@
 > Screenshots are taken from the running desktop application.
 
 ### New Chat Page
-```
-┌─────────────────────────────────────────────────────────┐
-│  ☰  AI Personalized Learning App          _ □ ✕        │
-├────────┬────────────────────────────────────────────────┤
-│  🆕    │                                                │
-│  New   │         What can I help with?                 │
-│  Chat  │                                                │
-│        │   ┌────────────────────────────────────────┐  │
-│ Recent │   │  Ask Anything...                  🔍   │  │
-│ chats  │   └────────────────────────────────────────┘  │
-│        │                                                │
-│ ⚙️ Set  │                                    [ Log In ] │
-└────────┴────────────────────────────────────────────────┘
-```
+ ![Alt text](assets/Screenshot-1.png)
+
+### Attaching Document with User Prompt
+ ![Alt text](assets/Screenshot-2.png)
 
 ### Conversation Page (with streaming)
-```
-┌─────────────────────────────────────────────────────────┐
-│  ☰  AI Personalized Learning App          _ □ ✕        │
-├────────┬────────────────────────────────────────────────┤
-│  🆕    │                                                │
-│  New   │                      ┌───────────────────────┐ │
-│  Chat  │                      │  Explain binary trees │ │  ← User bubble (right-aligned, blue)
-│        │                      └───────────────────────┘ │
-│  Chat1 │  ┌─────────────────────────────────────────┐   │
-│  Chat2 │  │  A binary tree is a data structure...   │   │  ← AI bubble (left-aligned, dark)
-│  Chat3 │  │  ```python                              │   │
-│        │  │  class Node:                            │   │
-│        │  │      def __init__(self, val):           │   │
-│        │  └─────────────────────────────────────────┘   │
-│        │                                                │
-│ ⚙️ Set  │   ┌─────────────────────────────────────⏹️┐  │
-└────────┴───┴─────────────────────────────────────────┴──┘
-```
+![Alt text](assets/Screenshot-3.png)
 
 ### Settings / Preferences Page
-```
-┌─────────────────────────────────────────────────────────┐
-│  Settings                                               │
-│  ┌──────────────┐  ┌──────────────────────────────────┐ │
-│  │ Account      │  │ Preferences                      │ │
-│  │ User Interface│  │                                  │ │
-│  │ Notifications│  │ Learning style     [ Text    ▾ ] │ │
-│  │ Update       │  │ Difficulty         [ Easy    ▾ ] │ │
-│  │ Preferences  │  │ Daily goal H:M     [00] [00]     │ │
-│  │ About        │  │ Preferred output   [ Search  ▾ ] │ │
-│  └──────────────┘  │                        [ Save ]  │ │
-└────────────────────┴─────────────────────────────────────┘
-```
+![Alt text](assets/Screenshot-5.png)
 
 ---
 
