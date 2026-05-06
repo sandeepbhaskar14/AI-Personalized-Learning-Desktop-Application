@@ -565,12 +565,6 @@ Please keep frontend and backend concerns separate, and test streaming with both
 
 ---
 
-## 📄 License
-
-This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
-
----
-
 ## 🙏 Acknowledgements
 
 - [OpenRouter](https://openrouter.ai) — Unified LLM API gateway
