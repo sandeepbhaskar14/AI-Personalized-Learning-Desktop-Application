@@ -248,107 +248,89 @@ _ATTACH_ICON_PATH = "Reqs/add_icon.png"   # swap to a paperclip icon if you have
  
 def open_document(self):
     """
-    Open a file dialog, extract text from the chosen document,
-    and store it on the window for the next prompt submission.
-    If a document is already attached, clicking the button removes it.
+    Open file dialog → show loading chip while reading →
+    replace with attachment chip when done.
+    Second click clears the attachment.
     """
-    # --- Toggle: if already attached, clear it ---
     if getattr(self, 'attached_document', None):
         clear_document(self)
         return
  
     path, _ = QFileDialog.getOpenFileName(
-        self,
-        "Attach a Document",
-        "",
-        _SUPPORTED_FILTERS
+        self, "Attach a Document", "", _SUPPORTED_FILTERS
     )
- 
     if not path:
-        return  # user cancelled
- 
-    try:
-        text = _extract_text_from_file(path)
-    except (ImportError, ValueError, Exception) as e:
-        QMessageBox.critical(
-            self,
-            "Document Error",
-            f"Could not read the file:\n\n{e}"
-        )
         return
- 
-    if not text.strip():
-        QMessageBox.warning(
-            self,
-            "Empty Document",
-            "The selected file appears to be empty or contains no readable text."
-        )
-        return
- 
-    # Truncate very large documents to avoid token overflow (≈ 12 000 chars ≈ 3 000 tokens)
-    MAX_CHARS = 12_000
-    truncated = False
-    if len(text) > MAX_CHARS:
-        text = text[:MAX_CHARS]
-        truncated = True
  
     filename = os.path.basename(path)
  
+    # Show loading chip in BOTH text edits (add_btn stays visible)
+    for te in (self.ui.text_prompt, self.ui.text_prompt_2):
+        te.show_loading(filename)
+ 
+    from PyQt5.QtWidgets import QApplication
+    QApplication.processEvents()   # repaint before blocking I/O
+ 
+    try:
+        text = _extract_text_from_file(path)
+    except Exception as e:
+        for te in (self.ui.text_prompt, self.ui.text_prompt_2):
+            te.hide_loading()
+        QMessageBox.critical(self, "Document Error",
+                             f"Could not read the file:\n\n{e}")
+        return
+ 
+    for te in (self.ui.text_prompt, self.ui.text_prompt_2):
+        te.hide_loading()
+ 
+    if not text.strip():
+        QMessageBox.warning(self, "Empty Document",
+                            "The file is empty or has no readable text.")
+        return
+ 
+    MAX_CHARS = 12_000
+    truncated = len(text) > MAX_CHARS
+    if truncated:
+        text = text[:MAX_CHARS]
+ 
+    # Build pixmap for images
     IMAGE_EXTS = {".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp"}
-
-    ext = os.path.splitext(path)[1].lower()
-    is_image = ext in IMAGE_EXTS
-
-    pixmap = None
+    ext        = os.path.splitext(path)[1].lower()
+    is_image   = ext in IMAGE_EXTS
+    pixmap     = None
     if is_image:
-        from PyQt5.QtGui import QPixmap
-
-        pixmap = QPixmap(path)
-
+        from PyQt5.QtGui import QPixmap as _QP
+        pixmap = _QP(path)
         if pixmap.isNull():
             pixmap = None
-
-
+ 
     self.attached_document = {
         "filename": filename,
-        "text": text,
+        "text":     text,
         "truncated": truncated,
         "is_image": is_image,
-        "pixmap": pixmap,
+        "pixmap":   pixmap,
     }
-
-
-    # Show chip in both text boxes
+ 
+    print(colored(f"Document attached: {filename} ({len(text)} chars)", "cyan"))
+ 
     for te in (self.ui.text_prompt, self.ui.text_prompt_2):
         te.set_attachment(self.attached_document)
-
-
-    print(
-        colored(
-            f"Document attached: {filename} ({len(text)} chars)",
-            "cyan"
-        )
-    )
-
-    # Keep existing button style/tooltip
+ 
     _set_attach_button_active(self, filename)
  
     if truncated:
         QMessageBox.information(
-            self,
-            "Document Truncated",
-            f"'{filename}' is large and has been truncated to the first "
-            f"{MAX_CHARS:,} characters to fit within the AI context window."
+            self, "Document Truncated",
+            f"'{filename}' was truncated to {MAX_CHARS:,} chars."
         )
  
  
+ 
 def clear_document(self):
-    """Remove the currently attached document and reset button icons."""
     self.attached_document = None
-
     for te in (self.ui.text_prompt, self.ui.text_prompt_2):
         te.set_attachment(None)
-
     _set_attach_button_inactive(self)
     print(colored("Document detached", "yellow"))
  
@@ -739,9 +721,12 @@ def finalize_stream(self):
     self.chat_area.scroll_to_bottom()
 
     search_icon = QtGui.QIcon()
-    search_icon.addPixmap(QtGui.QPixmap("Reqs/search.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-    self.ui.searchButton_2.setIcon(search_icon)
-    self.ui.searchButton_2.setIconSize(QSize(27, 27))
+    search_icon.addPixmap(QtGui.QPixmap("Reqs/search.png"),
+                          QtGui.QIcon.Normal, QtGui.QIcon.Off)
+    self.ui.text_prompt_2.search_btn.setIcon(search_icon)
+    self.ui.text_prompt_2.search_btn.setIconSize(QSize(24, 24))
+    self.ui.text_prompt.search_btn.setIcon(search_icon)
+    self.ui.text_prompt.search_btn.setIconSize(QSize(24, 24))
     
     # Clear attached document after a successful send
     clear_document(self)
@@ -792,9 +777,13 @@ def _on_stream_stopped(self):
 
     # Restore search icon
     search_icon = QtGui.QIcon()
-    search_icon.addPixmap(QtGui.QPixmap("Reqs/search.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-    self.ui.searchButton_2.setIcon(search_icon)
-    self.ui.searchButton_2.setIconSize(QSize(27, 27))
+    search_icon.addPixmap(QtGui.QPixmap("Reqs/search.png"),
+                          QtGui.QIcon.Normal, QtGui.QIcon.Off)
+    self.ui.text_prompt_2.search_btn.setIcon(search_icon)
+    self.ui.text_prompt_2.search_btn.setIconSize(QSize(24, 24))
+    self.ui.text_prompt.search_btn.setIcon(search_icon)
+    self.ui.text_prompt.search_btn.setIconSize(QSize(24, 24))
+ 
     
     # Clear attached document on stop too
     clear_document(self)
@@ -825,9 +814,12 @@ def send_prompt(self):
     self._is_streaming = True
 
     stop_icon = QtGui.QIcon()
-    stop_icon.addPixmap(QtGui.QPixmap("Reqs/stop.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-    self.ui.searchButton_2.setIcon(stop_icon)
-    self.ui.searchButton_2.setIconSize(QSize(32, 32))
+    stop_icon.addPixmap(QtGui.QPixmap("Reqs/stop.png"),
+                        QtGui.QIcon.Normal, QtGui.QIcon.Off)
+    self.ui.text_prompt_2.search_btn.setIcon(stop_icon)
+    self.ui.text_prompt_2.search_btn.setIconSize(QSize(32, 32))
+    self.ui.text_prompt.search_btn.setIcon(stop_icon)
+    self.ui.text_prompt.search_btn.setIconSize(QSize(32, 32))
 
     # ── KEY FIX: reuse the same chat_id for the whole session ──
     # Only generate a new UUID if there is no active chat session yet.
@@ -840,13 +832,12 @@ def send_prompt(self):
     
     # ── Build display text for the user bubble ──────────────────────────
     doc = getattr(self, 'attached_document', None)
-    if doc:
-        display_text = f"📎 {doc['filename']}\n\n{text}"
-    else:
-        display_text = text
         
-    user_bubble = ChatBubble(text, is_user=True, available_width=chat_width)
+    user_bubble = ChatBubble(text, is_user=True, available_width=chat_width, attachment=doc)
     self.chat_area.add_bubble(user_bubble)
+    
+    for te in (self.ui.text_prompt, self.ui.text_prompt_2):
+        te.set_attachment(None)
 
     self.ai_bubble = ChatBubble("", is_user=False, available_width=chat_width)
     self.ai_bubble.start_stream()

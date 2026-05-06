@@ -33,138 +33,114 @@ from ui.widgets.chat_area import ChatArea
 
 
 class MainWindow(QMainWindow) :
-    def __init__(self) :
+    def __init__(self):
         QMainWindow.__init__(self)
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
-        
+ 
+        # ── Hide the external StickyButton siblings ────────────────────────────
+        # The new AutoGrowTextEdit has add_btn + search_btn built in at the
+        # bottom of the frame.  The mainUI.py siblings are no longer needed.
+        self.ui.addButton.hide()
+        self.ui.searchButton.hide()
+        self.ui.addButton_2.hide()
+        self.ui.searchButton_2.hide()
+ 
+        # ── Unlock conversation-page input frame ───────────────────────────────
         self.ui.frame_2.setMinimumHeight(60)
         self.ui.frame_2.setMaximumHeight(16777215)
-    
+        self.ui.text_prompt.setMaximumHeight(16777215)
+        self.ui.text_prompt_2.setMaximumHeight(16777215)
  
+        # Add bottom margin so the input isn't flush with the window edge
         self.ui.verticalLayout_18.setContentsMargins(0, 0, 0, 12)
-        
-        self.ui.addButton.clicked.connect(
-            lambda: open_document(self)
-        )
-
-        self.ui.addButton_2.clicked.connect(
-            lambda: open_document(self)
-        )
-        
+ 
+        # Grow conversation input upward: frame_2 height tracks text_prompt_2
+        def _on_conv_input_h(h: int):
+            self.ui.frame_2.setFixedHeight(h + 16)
+        self.ui.text_prompt_2.height_changed.connect(_on_conv_input_h)
+ 
+        # ── Chat area ──────────────────────────────────────────────────────────
         self.chat_area = ChatArea()
         self.ui.chat_layout.addWidget(self.chat_area)
-        
+ 
         self.ui_functions = UIFunctions(self)
         self.ui_functions.uiDefinitions()
-        
-        # Release the hardcoded 150 px lock on the conversation-page input frame
-        self.ui.frame_2.setMinimumHeight(60)
-        self.ui.frame_2.setMaximumHeight(16777215)  
-        
-        # Remove the maxHeight lock on the text_prompt_2
-        self.ui.text_prompt_2.setMaximumHeight(16777215)
-        self.ui.text_prompt.setMaximumHeight(16777215)
-        
-        
-        
+ 
         # No document attached at startup
         self.attached_document = None
-        
-
-        # Attach search/add buttons to text edits (sticky positioning)
-        self.ui.searchButton.setTextEdit(self.ui.text_prompt)
-        self.ui.searchButton.setAnchor("bottom-right")
-
-        self.ui.addButton.setTextEdit(self.ui.text_prompt)
-        self.ui.addButton.setAnchor("bottom-left")
-        
-        # Set initial tooltip for add buttons
-        self.ui.addButton.setToolTip("Attach a document")
-        self.ui.addButton_2.setToolTip("Attach a document")
-        
-        
-        # "Recent chats" label set hidden initially
+ 
+        # ── Connect internal add buttons (ONE connection each, no duplicates) ──
+        self.ui.text_prompt.add_btn.clicked.connect(
+            lambda: open_document(self)
+        )
+        self.ui.text_prompt_2.add_btn.clicked.connect(
+            lambda: open_document(self)
+        )
+ 
+        # ── Connect internal search buttons ────────────────────────────────────
+        self.ui.text_prompt.search_btn.clicked.connect(
+            lambda: self.send_user_prompt()
+        )
+        self.ui.text_prompt_2.search_btn.clicked.connect(
+            lambda: self._handle_search_or_stop()
+        )
+ 
+        # ── Sidebar / navigation ───────────────────────────────────────────────
         self.ui.label_7.setVisible(False)
-
-        # The chat history list set hidden initialy
         self.ui.chat_history.setVisible(False)
-        
-        # update preferences only when user is logged in
         self.ui.button_save.setEnabled(False)
-        
-        def MoveWindow(event) :
-            
-            # ==>> Restore before move
-            if self.ui_functions.returnStatus() == 1 :
+ 
+        def MoveWindow(event):
+            if self.ui_functions.returnStatus() == 1:
                 self.ui_functions.maximize_restore()
-            
-            # ==>> Move Window when left button is clicked and dragged
-            if event.buttons() == Qt.LeftButton :
+            if event.buttons() == Qt.LeftButton:
                 self.move(self.pos() + event.globalPos() - self.dragpos)
                 self.dragpos = event.globalPos()
-                event.accept()   
-
-        # ==>> Move Window
-        self.ui.status_bar.mouseMoveEvent = MoveWindow 
-        
-
-        # ==>> Page toggle and Strips color function calling
-        self.ui.toggle_button.clicked.connect(lambda: self.ui_functions.toggle(275, True))
-        self.ui.button_new_chat.clicked.connect(lambda: self.ui_functions.setNewChatPage())
-        self.ui.button_settings.clicked.connect(lambda: self.ui_functions.setSettingsPage())
-        self.ui.buttonAbout.clicked.connect(lambda: self.ui_functions.setAboutPage())
-        self.ui.acc_button.clicked.connect(lambda: self.ui_functions.setAccountPage())
-        self.ui.button_preferences.clicked.connect(lambda: self.ui_functions.setPreferencesPage())
-        self.ui.button_logout.clicked.connect(lambda: self.invoke_logout())
-        self.ui.login_button.clicked.connect(lambda: run_login(self))
-        
-        self.ui.button_save.clicked.connect(lambda: self.handle_user_preferences())
-        self.ui.searchButton.clicked.connect(lambda: self.send_user_prompt())
-        self.ui.searchButton_2.clicked.connect(lambda: self.send_user_prompt())
-        
+                event.accept()
+ 
+        self.ui.status_bar.mouseMoveEvent = MoveWindow
+ 
+        self.ui.toggle_button.clicked.connect(
+            lambda: self.ui_functions.toggle(275, True))
+        self.ui.button_new_chat.clicked.connect(
+            lambda: self.ui_functions.setNewChatPage())
+        self.ui.button_settings.clicked.connect(
+            lambda: self.ui_functions.setSettingsPage())
+        self.ui.buttonAbout.clicked.connect(
+            lambda: self.ui_functions.setAboutPage())
+        self.ui.acc_button.clicked.connect(
+            lambda: self.ui_functions.setAccountPage())
+        self.ui.button_preferences.clicked.connect(
+            lambda: self.ui_functions.setPreferencesPage())
+        self.ui.button_logout.clicked.connect(
+            lambda: self.invoke_logout())
+        self.ui.login_button.clicked.connect(
+            lambda: run_login(self))
+        self.ui.button_save.clicked.connect(
+            lambda: self.handle_user_preferences())
         self.ui.button_new_chat.clicked.connect(self.handle_new_chat)
-    
-        # self.ui.searchButton.clicked.connect(lambda: self._handle_search_or_stop())
-        self.ui.searchButton_2.clicked.connect(lambda: self._handle_search_or_stop())
-        
-        # ── Document attachment buttons ──────────────────────────────────
-        # self.ui.searchButton.clicked.connect(lambda: self._handle_search_or_stop())
-        self.ui.addButton.clicked.connect(lambda: open_document(self))
-        self.ui.searchButton_2.clicked.connect(lambda: self._handle_search_or_stop())
-        self.ui.addButton_2.clicked.connect(lambda: open_document(self))
-        
-        # ────────────────────────────────────────────────────────────────
-        
-        self.ui.chat_history.itemClicked.connect(lambda item: on_chat_history_item_clicked(self, item))
-        
-        # style the list widget so it fits the dark sidebar
+ 
+        self.ui.chat_history.itemClicked.connect(
+            lambda item: on_chat_history_item_clicked(self, item))
         self.ui.chat_history.setStyleSheet("""
             QListWidget {
-                background: transparent;
-                border: none;
+                background: transparent; border: none;
                 color: rgba(255,255,255,160);
-                font-family: 'Roboto';
-                font-size: 10pt;
+                font-family: 'Roboto'; font-size: 10pt;
             }
-            QListWidget::item {
-                padding: 8px 12px;
-                border-radius: 6px;
-            }
+            QListWidget::item { padding: 8px 12px; border-radius: 6px; }
             QListWidget::item:hover {
                 background-color: rgb(55, 62, 76);
                 color: rgba(255,255,255,220);
             }
             QListWidget::item:selected {
-                background-color: rgb(48, 85, 140);
-                color: white;
+                background-color: rgb(48, 85, 140); color: white;
             }
         """)
-        
         self.ui.chat_history.setContextMenuPolicy(Qt.CustomContextMenu)
         self.ui.chat_history.customContextMenuRequested.connect(
-            lambda pos: _show_chat_context_menu(self, pos)
-        )
+            lambda pos: _show_chat_context_menu(self, pos))
     
         
     def keyPressEvent(self, event):

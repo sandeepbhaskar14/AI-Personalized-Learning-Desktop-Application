@@ -109,12 +109,12 @@ class ChatBubble(QWidget):
 
     def __init__(self, text="", is_user=False, available_width=800, attachment=None):
         super().__init__()
+        self._attachment = attachment
         self.is_user = is_user
         self._available_width = available_width  # fallback only
         self._user_text = text if is_user else ""
         self._shown_once = False
         self._streaming = False
-        self._attachment = attachment
 
         self._height_timer = QTimer(self)
         self._height_timer.setSingleShot(True)
@@ -158,144 +158,81 @@ class ChatBubble(QWidget):
             
             if self._attachment:
                 import os as _os
-
-                from PyQt5.QtWidgets import (
-                    QFrame as _QF,
-                    QHBoxLayout as _HL,
-                    QLabel as _QL
-                )
-
-                from PyQt5.QtGui import (
-                    QPixmap as _QP,
-                    QPainter as _QP2,
-                    QPainterPath as _QPP
-                )
-
+                from PyQt5.QtWidgets import (QFrame as _QF, QHBoxLayout as _HL,
+                                            QVBoxLayout as _VL, QLabel as _QL)
+                from PyQt5.QtGui import (QPixmap as _QP, QPainter as _QP2,
+                                        QPainterPath as _QPP)
+    
                 chip = _QF()
-
                 chip.setStyleSheet("""
                     QFrame {
-                        background-color: rgba(255,255,255,15);
-                        border-radius: 10px;
-                        border: none;
+                        background-color: rgba(255,255,255,12);
+                        border-radius: 10px; border: none;
                     }
                 """)
-
                 chip_row = _HL(chip)
-
-                chip_row.setContentsMargins(
-                    8,
-                    5,
-                    10,
-                    5
-                )
-
+                chip_row.setContentsMargins(8, 6, 10, 6)
                 chip_row.setSpacing(8)
-
+    
+                # Thumbnail or ext badge
                 th = _QL()
-
                 th.setAlignment(Qt.AlignCenter)
-
                 px = self._attachment.get("pixmap")
-
                 if px and not px.isNull():
-
-                    scaled = px.scaled(
-                        56,
-                        42,
-                        Qt.KeepAspectRatio,
-                        Qt.SmoothTransformation
-                    )
-
+                    scaled = px.scaled(56, 42, Qt.KeepAspectRatio,
+                                    Qt.SmoothTransformation)
                     res = _QP(scaled.size())
-
                     res.fill(Qt.transparent)
-
                     ptr = _QP2(res)
-
-                    ptr.setRenderHint(
-                        _QP2.Antialiasing
-                    )
-
+                    ptr.setRenderHint(_QP2.Antialiasing)
                     pth = _QPP()
-
-                    pth.addRoundedRect(
-                        0,
-                        0,
-                        scaled.width(),
-                        scaled.height(),
-                        6,
-                        6
-                    )
-
+                    pth.addRoundedRect(0, 0, scaled.width(), scaled.height(), 6, 6)
                     ptr.setClipPath(pth)
-
-                    ptr.drawPixmap(
-                        0,
-                        0,
-                        scaled
-                    )
-
+                    ptr.drawPixmap(0, 0, scaled)
                     ptr.end()
-
                     th.setPixmap(res)
-
-                    th.setFixedSize(
-                        56,
-                        42
-                    )
-
+                    th.setFixedSize(56, 42)
                 else:
-
-                    ext_t = _os.path.splitext(
-                        self._attachment["filename"]
-                    )[1].upper().lstrip('.') or "FILE"
-
+                    ext_t = (_os.path.splitext(self._attachment["filename"])[1]
+                            .upper().lstrip('.') or "FILE")
                     th.setText(ext_t)
-
-                    th.setFixedSize(
-                        40,
-                        34
-                    )
-
+                    th.setFixedSize(40, 34)
                     th.setStyleSheet("""
-                        background-color: rgba(255,255,255,25);
-                        border-radius: 6px;
-                        color: white;
-                        font-size: 9px;
-                        font-family: 'Roboto';
-                        font-weight: bold;
+                        background-color: rgba(255,255,255,22);
+                        border-radius: 6px; color: white;
+                        font-size: 9px; font-family: 'Roboto'; font-weight: bold;
                     """)
-
                 chip_row.addWidget(th)
-
+    
+                # Name + type column
+                col = _VL()
+                col.setSpacing(1)
+                col.setContentsMargins(0, 0, 0, 0)
+    
                 fn = _QL()
-
+                fn.setText(fn.fontMetrics().elidedText(
+                    self._attachment["filename"], Qt.ElideMiddle, 190))
+                fn.setToolTip(self._attachment["filename"])
                 fn.setStyleSheet("""
-                    color: rgba(255,255,255,200);
-                    font-family: 'Roboto';
-                    font-size: 9pt;
-                    background: transparent;
-                    border: none;
+                    color: rgba(255,255,255,210);
+                    font-family: 'Roboto'; font-size: 9pt;
+                    background: transparent; border: none;
                 """)
-
-                fn.setText(
-                    fn.fontMetrics().elidedText(
-                        self._attachment["filename"],
-                        Qt.ElideMiddle,
-                        200
-                    )
-                )
-
-                fn.setToolTip(
-                    self._attachment["filename"]
-                )
-
-                chip_row.addWidget(fn)
-
+                col.addWidget(fn)
+    
+                ext_str = (_os.path.splitext(self._attachment["filename"])[1]
+                        .upper().lstrip('.'))
+                type_lbl = _QL(f"{ext_str} file" if ext_str else "file")
+                type_lbl.setStyleSheet("""
+                    color: rgba(255,255,255,90);
+                    font-family: 'Roboto'; font-size: 8pt;
+                    background: transparent; border: none;
+                """)
+                col.addWidget(type_lbl)
+    
+                chip_row.addLayout(col)
                 chip_row.addStretch()
-
-                bubble_layout.addWidget(chip)
+                bubble_layout.addWidget(chip)   # ← chip sits above the text
 
 
             bubble_layout.addWidget(self.label)
