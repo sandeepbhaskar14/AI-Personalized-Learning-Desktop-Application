@@ -6,6 +6,7 @@
 
 
 # importing necessary packages and modules ------------------------------
+from PyQt5 import QtGui
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QMainWindow, QApplication
 import sys, threading
@@ -45,6 +46,10 @@ class MainWindow(QMainWindow) :
         self.ui.searchButton.hide()
         self.ui.addButton_2.hide()
         self.ui.searchButton_2.hide()
+        
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap("Reqs/user.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.ui.login_button.setIcon(icon)
  
         # ── Unlock conversation-page input frame ───────────────────────────────
         self.ui.frame_2.setMinimumHeight(120)

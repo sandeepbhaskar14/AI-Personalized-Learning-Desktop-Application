@@ -100,6 +100,7 @@ def stream_prompt():
     data = request.json
 
     prompt_text = data.get("prompt_text")
+    prompt_title = prompt_text[:25] + '...' if len(prompt_text) > 30 else prompt_text
     prompt_type = data.get("prompt_type")
     chat_id = data.get("chat_id")
     # ── Document fields (optional) ────────────────────────────────────
@@ -126,7 +127,7 @@ def stream_prompt():
             chat = Chat(
                 user_id=user_id,
                 chat_id=chat_id,
-                title=prompt_text[:50]  # first message as title
+                title=prompt_title  # first message as title
             )
             db.session.add(chat)
         else:

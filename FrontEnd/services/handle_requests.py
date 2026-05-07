@@ -474,7 +474,7 @@ def run_login(self):
     result = login.exec_()  # modal dialog
 
     if result == QDialog.Accepted:
-        self.ui.login_button.setText("Logged In")
+        self.ui.login_button.setText("")
         self.ui.login_button.setEnabled(False)
         
 def after_verify_token(self, response):
@@ -486,13 +486,16 @@ def after_verify_token(self, response):
         stylesheet = """
                         font-family: 'Roboto';       /* font family */
                         font-size: 10pt;            /* font size */
-                        font-style: italic;         /* italic text */
                         color: green;                /* text color */
                 """
-        self.ui.login_button.setText("Logged In")
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap("Reqs/user.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.ui.login_button.setIcon(icon)
+        self.ui.login_button.setText('   ' + username)
+        self.ui.login_button.setToolTip('')
         self.ui.login_button.setStyleSheet(stylesheet)
         self.ui.login_button.setEnabled(False)
-        self.ui.login_button.setToolTip(username)
+        
         self.ui.logged_in_label.setText('Logged In')
         self.ui.logged_in_label.setStyleSheet(stylesheet)
         

@@ -1275,13 +1275,13 @@ p, li { white-space: pre-wrap; }
                            <widget class="QFrame" name="frame_24">
                             <property name="minimumSize">
                              <size>
-                              <width>0</width>
+                              <width>120</width>
                               <height>40</height>
                              </size>
                             </property>
                             <property name="maximumSize">
                              <size>
-                              <width>120</width>
+                              <width>160</width>
                               <height>16777215</height>
                              </size>
                             </property>
@@ -1324,7 +1324,17 @@ QPushButton:hover{
 }</string>
                                </property>
                                <property name="text">
-                                <string>Log In</string>
+                                <string>    Log In</string>
+                               </property>
+                               <property name="icon">
+                                <iconset>
+                                 <normaloff>../Reqs/user.png</normaloff>../Reqs/user.png</iconset>
+                               </property>
+                               <property name="iconSize">
+                                <size>
+                                 <width>20</width>
+                                 <height>20</height>
+                                </size>
                                </property>
                               </widget>
                              </item>

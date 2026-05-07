@@ -552,9 +552,9 @@ class Ui_MainWindow(object):
 "QTextEdit:focus{\n"
 "    border:2px solid rgb(85,170,255);\n"
 "}")
-        # self.text_prompt.setFrameShape(QtWidgets.QFrame.StyledPanel)
-        # self.text_prompt.setFrameShadow(QtWidgets.QFrame.Plain)
-        # self.text_prompt.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+        self.text_prompt.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.text_prompt.setFrameShadow(QtWidgets.QFrame.Plain)
+        self.text_prompt.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         self.text_prompt.setObjectName("text_prompt")
         self.text_prompt.raise_()
         self.labelProtection.raise_()
@@ -588,8 +588,8 @@ class Ui_MainWindow(object):
         self.frame_23.setObjectName("frame_23")
         self.horizontalLayout_16.addWidget(self.frame_23)
         self.frame_24 = QtWidgets.QFrame(self.frame_21)
-        self.frame_24.setMinimumSize(QtCore.QSize(0, 40))
-        self.frame_24.setMaximumSize(QtCore.QSize(120, 16777215))
+        self.frame_24.setMinimumSize(QtCore.QSize(120, 40))
+        self.frame_24.setMaximumSize(QtCore.QSize(160, 16777215))
         self.frame_24.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.frame_24.setFrameShadow(QtWidgets.QFrame.Raised)
         self.frame_24.setObjectName("frame_24")
@@ -611,6 +611,10 @@ class Ui_MainWindow(object):
 "    color:rgb(85, 170, 255);\n"
 "    background-color:rgb(52, 57, 70)\n"
 "}")
+        icon9 = QtGui.QIcon()
+        icon9.addPixmap(QtGui.QPixmap("../Reqs/user.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.login_button.setIcon(icon9)
+        self.login_button.setIconSize(QtCore.QSize(20, 20))
         self.login_button.setObjectName("login_button")
         self.horizontalLayout_17.addWidget(self.login_button)
         self.horizontalLayout_16.addWidget(self.frame_24)
@@ -1731,9 +1735,9 @@ class Ui_MainWindow(object):
 "QTextEdit:focus{\n"
 "    border:2px solid rgb(85,170,255);\n"
 "}")
-        # self.text_prompt_2.setFrameShape(QtWidgets.QFrame.StyledPanel)
-        # self.text_prompt_2.setFrameShadow(QtWidgets.QFrame.Plain)
-        # self.text_prompt_2.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+        self.text_prompt_2.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.text_prompt_2.setFrameShadow(QtWidgets.QFrame.Plain)
+        self.text_prompt_2.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         self.text_prompt_2.setObjectName("text_prompt_2")
         self.searchButton_2 = StickyButton(self.frame_60)
         self.searchButton_2.setGeometry(QtCore.QRect(640, 50, 45, 45))
@@ -1806,14 +1810,14 @@ class Ui_MainWindow(object):
 "p, li { white-space: pre-wrap; }\n"
 "</style></head><body style=\" font-family:\'Roboto\'; font-size:30pt; font-weight:400; font-style:normal;\">\n"
 "<p align=\"center\" style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'ui-sans-serif\',\'-apple-system\',\'system-ui\',\'Segoe UI\',\'Helvetica\',\'Apple Color Emoji\',\'Arial\',\'sans-serif\',\'Segoe UI Emoji\',\'Segoe UI Symbol\'; font-size:24pt;\">What can I help with?</span></p></body></html>"))
-#         self.text_prompt.setStyle(_translate("MainWindow", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
-# "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
-# "p, li { white-space: pre-wrap; }\n"
-# "</style></head><body style=\" font-family:\'Roboto\'; font-size:10pt; font-weight:400; font-style:normal;\">\n"
-# "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:\'MS Shell Dlg 2\'; font-size:7.8pt;\"><br /></p></body></html>"))
+        self.text_prompt.setHtml(_translate("MainWindow", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
+"<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
+"p, li { white-space: pre-wrap; }\n"
+"</style></head><body style=\" font-family:\'Roboto\'; font-size:10pt; font-weight:400; font-style:normal;\">\n"
+"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:\'MS Shell Dlg 2\'; font-size:7.8pt;\"><br /></p></body></html>"))
         self.text_prompt.setPlaceholderText(_translate("MainWindow", "Ask Anything"))
         self.login_button.setToolTip(_translate("MainWindow", "Not logged in!"))
-        self.login_button.setText(_translate("MainWindow", "Log In"))
+        self.login_button.setText(_translate("MainWindow", "    Log In"))
         self.label_32.setText(_translate("MainWindow", "Settings"))
         self.acc_button.setText(_translate("MainWindow", "Account"))
         self.buttonUI.setText(_translate("MainWindow", "User Interface"))
@@ -1854,11 +1858,11 @@ class Ui_MainWindow(object):
         self.label_11.setText(_translate("MainWindow", "AI Personalized Learning App"))
         self.label_12.setText(_translate("MainWindow", "version: 1.0"))
         self.button_check_update.setText(_translate("MainWindow", "Check for Update"))
-#         self.text_prompt_2.setText(_translate("MainWindow", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
-# "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
-# "p, li { white-space: pre-wrap; }\n"
-# "</style></head><body style=\" font-family:\'Roboto\'; font-size:10pt; font-weight:400; font-style:normal;\">\n"
-# "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:\'MS Shell Dlg 2\'; font-size:7.8pt;\"><br /></p></body></html>"))
+        self.text_prompt_2.setHtml(_translate("MainWindow", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
+"<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
+"p, li { white-space: pre-wrap; }\n"
+"</style></head><body style=\" font-family:\'Roboto\'; font-size:10pt; font-weight:400; font-style:normal;\">\n"
+"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:\'MS Shell Dlg 2\'; font-size:7.8pt;\"><br /></p></body></html>"))
         self.text_prompt_2.setPlaceholderText(_translate("MainWindow", "Ask Anything"))
 from ui_controllers.auto_grow_text_edit import AutoGrowTextEdit
 from ui_controllers.sticky_search_button import StickyButton
