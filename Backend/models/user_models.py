@@ -68,7 +68,8 @@ class Prompt(db.Model):
         db.Enum("pending", "processing", "completed", "failed", name="prompt_status"),
         default="pending"
     )
-
+    document_name = db.Column(db.String(255), nullable=True)
+    
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     response = db.relationship(

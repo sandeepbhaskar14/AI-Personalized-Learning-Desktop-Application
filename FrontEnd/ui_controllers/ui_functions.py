@@ -111,6 +111,8 @@ class UIFunctions:
         self.window.ui.stackedWidget_2.setCurrentWidget(self.window.ui.defaultPage)
 
     def setNewChatPage(self):
+        from services.handle_requests import clear_document
+        clear_document(self.window)
         self.window.ui.stackedWidget.setCurrentWidget(self.window.ui.new_chat_page)
 
     def setSettingsPage(self):

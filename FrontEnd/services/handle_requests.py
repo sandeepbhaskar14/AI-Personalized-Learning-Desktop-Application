@@ -8,9 +8,14 @@ from termcolor import colored
 import subprocess, re, os
 import requests
 
-import uuid
-
-
+_IMAGE_EXTS = {
+    ".png",
+    ".jpg",
+    ".jpeg",
+    ".gif",
+    ".bmp",
+    ".webp"
+}
 
 # worker thread to acheive parallelism and avoid GUI frezzing
 class WorkerThread(QThread): 
@@ -328,11 +333,12 @@ def open_document(self):
  
  
 def clear_document(self):
+    if self.attached_document:
+        for te in (self.ui.text_prompt, self.ui.text_prompt_2):
+            te.set_attachment(None)
+        _set_attach_button_inactive(self)
+        print(colored("Document detached", "yellow"))
     self.attached_document = None
-    for te in (self.ui.text_prompt, self.ui.text_prompt_2):
-        te.set_attachment(None)
-    _set_attach_button_inactive(self)
-    print(colored("Document detached", "yellow"))
  
  
 def _set_attach_button_active(self, filename: str):
@@ -919,28 +925,70 @@ def on_chat_history_item_clicked(self, item):
 
 
 def _render_loaded_chat(self, response):
+    clear_document(self)
     if response.get('status_code') != 200:
         return
 
     from ui.widgets.chat_bubble import ChatBubble
 
     # Switch to conversation page and clear existing bubbles
-    self.ui.stackedWidget.setCurrentWidget(self.ui.conversation_page)
+    self.ui.stackedWidget.setCurrentWidget(
+        self.ui.conversation_page
+    )
+
     self.clear_chat()
 
-    chat_id   = response['chat_id']
-    messages  = response.get('messages', [])
+    chat_id = response['chat_id']
+
+    messages = response.get(
+        'messages',
+        []
+    )
+
     chat_width = self.chat_area.width()
 
     for msg in messages:
-        is_user = msg['role'] == 'user'
-        bubble  = ChatBubble(msg['text'], is_user=is_user, available_width=chat_width)
-        self.chat_area.add_bubble(bubble)
 
-    # Resume this chat so new messages continue the same session
+        is_user = msg['role'] == 'user'
+
+        # Rebuild attachment from persisted filename
+        attachment = None
+
+        if is_user:
+
+            doc_name = msg.get(
+                'document_name'
+            )
+
+            if doc_name:
+
+                ext = os.path.splitext(
+                    doc_name
+                )[1].lower()
+
+                attachment = {
+                    "filename": doc_name,
+                    "pixmap": None,
+                    "is_image": ext in _IMAGE_EXTS,
+                    "text": "",
+                    "truncated": False,
+                }
+
+        bubble = ChatBubble(
+            msg['text'],
+            is_user=is_user,
+            available_width=chat_width,
+            attachment=attachment
+        )
+
+        self.chat_area.add_bubble(
+            bubble
+        )
+
+    # Resume this chat session
     self.current_chat_id = chat_id
+
     self.chat_area.scroll_to_bottom()
-    
     
 # ── Rename / Delete via right-click context menu ──────────────────────────────
 

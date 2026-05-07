@@ -3,7 +3,6 @@
 import time
 import datetime
 from flask import request, jsonify, Blueprint
-# from flask_jwt_extended import jwt_required, get_jwt_identity
 
 from models.user_models import db, Prompt, UserPreferences, Chat
 from services.auth_service import verify_token
@@ -12,7 +11,6 @@ import uuid
 
 # Import AI service
 from core.text_generate import stream_ai_response, active_streams
-
 
 chat_bp = Blueprint("chat", __name__)
 
@@ -63,7 +61,18 @@ def get_chat_messages(chat_id):
 
     messages = []
     for p in prompts:
-        messages.append({"role": "user", "text": p.prompt_text})
+        # ── user message ──────────────────────────────────────────────────────
+        # Include document_name so the frontend can re-render the chip.
+        user_msg = {
+            "role": "user",
+            "text": p.prompt_text,
+        }
+        if p.document_name:                    # attach filename if saved
+            user_msg["document_name"] = p.document_name
+ 
+        messages.append(user_msg)
+ 
+        # ── AI response ───────────────────────────────────────────────────────
         if p.response:
             messages.append({"role": "ai", "text": p.response.result_text})
 
@@ -132,6 +141,7 @@ def stream_prompt():
             prompt_text=prompt_text,
             prompt_type=prompt_type,
             status="processing",
+            document_name=document_name,
             created_at=datetime.datetime.utcnow()
         )
         db.session.add(prompt)
