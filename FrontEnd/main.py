@@ -128,16 +128,19 @@ class MainWindow(QMainWindow) :
                 background: transparent; border: none;
                 color: rgba(255,255,255,160);
                 font-family: 'Roboto'; font-size: 10pt;
+                outline: 0;  
             }
-            QListWidget::item { padding: 8px 12px; border-radius: 6px; }
+            QListWidget::item { padding: 8px 12px; border-radius: 6px; outline: none;}
             QListWidget::item:hover {
                 background-color: rgb(55, 62, 76);
                 color: rgba(255,255,255,220);
             }
             QListWidget::item:selected {
-                background-color: rgb(48, 85, 140); color: white;
+                background-color: rgb(48, 85, 140); 
+                color: white;
             }
         """)
+        self.ui.chat_history.setFocusPolicy(Qt.NoFocus)
         self.ui.chat_history.setContextMenuPolicy(Qt.CustomContextMenu)
         self.ui.chat_history.customContextMenuRequested.connect(
             lambda pos: _show_chat_context_menu(self, pos))
@@ -209,6 +212,8 @@ class MainWindow(QMainWindow) :
         self.attached_document = None
         from services.handle_requests import _set_attach_button_inactive
         _set_attach_button_inactive(self)
+        
+        self.ui.chat_history.clearSelection()
         
     def _handle_search_or_stop(self):
         """Toggle: if streaming → stop, else → send."""
