@@ -1,5 +1,4 @@
-import os
-import time
+import os, time
 
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
@@ -16,7 +15,6 @@ from core.stream_handler import StreamingHandler
 
 load_dotenv()
 
-# Initialize LLM once (important)
 llm = ChatOpenAI(
     model="openai/gpt-4o-mini",
     base_url="https://openrouter.ai/api/v1",
@@ -33,82 +31,101 @@ llm = ChatOpenAI(
 )
 
 # active streams registry: chat_id -> stop_flag (True = stop)
-# PROMPTS
 active_streams = {}
-# -------------------------------
 
 
-def stream_ai_response(prompt, chat_id, text, task, difficulty, style,
-                       document_text=None, document_name=None):
+def stream_ai_response(
+    prompt, chat_id, text, task, difficulty, style,
+    document_text=None,
+    document_name=None,
+    document_image_b64=None,
+    document_image_mime="image/png",
+):
     """
     Stream an AI response to the client.
+ 
     Parameters
     ----------
-    prompt        : Prompt ORM object (None for guests)
-    chat_id       : str
-    text          : The user's question / prompt text
-    task          : prompt_type (search, summary, mcqs, …)
-    difficulty    : e.g. "easy" / "medium" / "hard"
-    style         : learning style e.g. "text" / "visual"
-    document_text : Optional raw text extracted from an uploaded document
-    document_name : Optional filename of the uploaded document
+    prompt               : Prompt ORM object (None for guests)
+    chat_id              : str
+    text                 : The user's question / prompt text
+    task                 : prompt_type (search, summary, mcqs, …)
+    difficulty           : e.g. "easy" / "medium" / "hard"
+    style                : learning style e.g. "text" / "visual"
+    document_text        : Optional extracted text from a document file
+    document_name        : Optional filename of the attachment
+    document_image_b64   : Optional base64-encoded image bytes (for vision)
+    document_image_mime  : MIME type of the image, e.g. "image/png"
     """
     active_streams[chat_id] = False  # False = keep going
+    
     def generate():
-        handler = StreamingHandler()
         full_text = ""
         start_time = time.time()
 
         # ── Conversation history ───────────────────────────────────────
-        if prompt:  # logged-in user
-            messages = get_chat_history(chat_id)
-        else:       # guest user
-            messages = get_guest_history(chat_id)
+        messages = (get_chat_history(chat_id) if prompt
+                    else get_guest_history(chat_id))
 
         # ── System prompt ──────────────────────────────────────────────
-        system_prompt = f"""Always format code using triple backticks with language.
-            You are a personalized learning assistant.
-            Task: {task}
-            Difficulty: {difficulty}
-            Style: {style}"""
+        system_prompt = (
+            "Always format code using triple backticks with language.\n"
+            f"You are a personalized learning assistant.\n"
+            f"Task: {task}\n"
+            f"Difficulty: {difficulty}\n"
+            f"Style: {style}"
+        )
  
         # Inject the document as grounded context when present
         if document_text:
             doc_label = f'"{document_name}"' if document_name else "the uploaded document"
-            system_prompt += f"""
- 
-            The user has uploaded a document ({doc_label}). Its content is provided below between
-            the <document> tags. Use it as the primary source when answering the user's question.
-            Quote or reference specific parts where helpful. If the answer cannot be found in the
-            document, say so clearly before drawing on your general knowledge.
-            
-            <document>
-            {document_text}
-            </document>"""
-
-
+            system_prompt += (
+                f"\n\nThe user has uploaded a document ({doc_label}). "
+                "Its content is provided below between the <document> tags. "
+                "Use it as the primary source when answering. "
+                "Quote or reference specific parts where helpful. "
+                "If the answer cannot be found in the document, say so clearly "
+                "before drawing on your general knowledge.\n\n"
+                f"<document>\n{document_text}\n</document>"
+            )
 
         messages.insert(0, SystemMessage(content=system_prompt))
-        messages.append(HumanMessage(content=text))
+        
+        # ── Build the final HumanMessage ──────────────────────────────
+        # If a base64 image was provided, send a multimodal content block
+        # so the vision model can actually see the pixels.
+        if document_image_b64:
+            image_url = f"data:{document_image_mime};base64,{document_image_b64}"
+            human_content = [
+                {
+                    "type": "image_url",
+                    "image_url": {"url": image_url},
+                },
+                {
+                    "type": "text",
+                    "text": text,
+                },
+            ]
+            messages.append(HumanMessage(content=human_content))
+        else:
+            messages.append(HumanMessage(content=text))
 
         # ── Stream tokens ──────────────────────────────────────────────
         for chunk in llm.stream(messages):
             if active_streams.get(chat_id, False):
                 active_streams.pop(chat_id, None)
-                break  # Stop yielding
+                break 
             
             token = chunk.content
             if token:
                 full_text += token
-                encoded = token.replace("\n", "<<NEWLINE>>")
-                yield encoded + "\n"
+                yield token.replace("\n", "<<NEWLINE>>") + "\n"
                 
         # Cleanup stop flag
         active_streams.pop(chat_id, None)
         
         # ── Persist to DB (logged-in users only) ───────────────────────
-        if prompt: # user logged in
-            # AFTER STREAM COMPLETE → SAVE DB
+        if prompt: 
             response = DBResponse(
                 prompt_id=prompt.id,
                 result_text=full_text,
@@ -118,7 +135,6 @@ def stream_ai_response(prompt, chat_id, text, task, difficulty, style,
             )
 
             prompt.status = "completed"
-
             db.session.add(response)
             db.session.commit()
         else:

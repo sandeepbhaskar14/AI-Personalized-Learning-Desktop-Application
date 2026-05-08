@@ -1,33 +1,26 @@
 # routes/process_prompts.py
 
-import time
-import datetime
+import datetime, uuid
 from flask import request, jsonify, Blueprint
 
 from models.user_models import db, Prompt, UserPreferences, Chat
 from services.auth_service import verify_token
-
-import uuid
-
-# Import AI service
 from core.text_generate import stream_ai_response, active_streams
 
 chat_bp = Blueprint("chat", __name__)
+
 
 @chat_bp.route("/chat", methods=["GET"])
 def get_chats():
     user_id, error_response, status_code = verify_token()
     if status_code in (401, 403):
         return jsonify({"message": "Unauthorized", "status_code": status_code})
-
-    chats = (
-        Chat.query
-        .filter_by(user_id=user_id)
-        .order_by(Chat.updated_at.desc())
-        .limit(50)
-        .all()
-    )
-
+    
+    chats = (Chat.query
+             .filter_by(user_id=user_id)
+             .order_by(Chat.updated_at.desc())
+             .limit(50).all())
+    
     return jsonify({
         "status_code": 200,
         "chats": [
@@ -94,94 +87,66 @@ def stop_prompt():
 
 @chat_bp.route("/prompt/stream", methods=["POST"])
 def stream_prompt():
-    if request.headers: # user logged in
-        user_id, error_response, status_code = verify_token()
-        
+    user_id = None
+    if request.headers:
+        user_id, _, status_code = verify_token()
+ 
     data = request.json
-
-    prompt_text = data.get("prompt_text")
-    prompt_title = prompt_text[:25] + '...' if len(prompt_text) > 30 else prompt_text
-    prompt_type = data.get("prompt_type")
-    chat_id = data.get("chat_id")
-    # ── Document fields (optional) ────────────────────────────────────
-    document_text = data.get("document_text")   # may be None
-    document_name = data.get("document_name")   # may be None
-
+ 
+    prompt_text  = data.get("prompt_text")
+    prompt_type  = data.get("prompt_type")
+    chat_id      = data.get("chat_id") or str(uuid.uuid4())
+ 
+    # ── Document / image fields (all optional) ─────────────────────────
+    document_text      = data.get("document_text")       # extracted text
+    document_name      = data.get("document_name")       # filename
+    document_image_b64 = data.get("document_image_b64")  # base64-encoded image
+    document_image_mime= data.get("document_image_mime", "image/png")
+ 
     if not prompt_text or not prompt_type:
         return jsonify({"error": "Invalid input"}), 400
-
-    if not chat_id:
-        chat_id = str(uuid.uuid4())
-        
-    # DEFAULT VALUES (for guest)
-    difficulty = "medium"
+ 
+    difficulty     = "medium"
     learning_style = "text"
-
-    # ===============================
-    # LOGGED-IN USER FLOW
-    # ===============================
+ 
+    # ── Logged-in user ─────────────────────────────────────────────────
     if user_id:
-        # create chat if new
         chat = Chat.query.filter_by(chat_id=chat_id).first()
         if not chat:
-            chat = Chat(
-                user_id=user_id,
-                chat_id=chat_id,
-                title=prompt_title  # first message as title
-            )
+            chat = Chat(user_id=user_id, chat_id=chat_id,
+                        title=prompt_text[:50])
             db.session.add(chat)
         else:
             chat.updated_at = datetime.datetime.utcnow()
-
         db.session.commit()
-        
-        # Create prompt
+ 
         prompt = Prompt(
-            user_id=user_id,
-            chat_id=chat_id,
-            prompt_text=prompt_text,
-            prompt_type=prompt_type,
-            status="processing",
-            document_name=document_name,
+            user_id=user_id, chat_id=chat_id,
+            prompt_text=prompt_text, prompt_type=prompt_type,
+            status="processing", document_name=document_name,
             created_at=datetime.datetime.utcnow()
         )
         db.session.add(prompt)
         db.session.commit()
-
+ 
         prefs = UserPreferences.query.filter_by(user_id=user_id).first()
         if prefs:
-            difficulty = prefs.difficulty_level
+            difficulty     = prefs.difficulty_level
             learning_style = prefs.learning_style
         else:
             return jsonify({"error": "User preferences not set"}), 400
-        
-    # ===============================
-    # GUEST USER FLOW
-    # ===============================
     else:
-        prompt = None  # No DB storage
-
-    # ===============================
-    # STREAM RESPONSE (COMMON)
-    # ===============================
-
-    # STREAM RESPONSE
+        prompt = None
+ 
+    # ── Stream ─────────────────────────────────────────────────────────
     return stream_ai_response(
-        prompt,
-        chat_id,
-        prompt_text,
-        prompt_type,
-        difficulty,
-        learning_style,
-        document_text=document_text,   # ← passed through
-        document_name=document_name,   # ← passed through
-    )
-    # except Exception as e:
-    #     prompt.status = "failed"
-    #     db.session.commit()
-
-    #     return jsonify({"error": str(e), "status_code": 500})
-    
+        prompt, chat_id, prompt_text,
+        prompt_type, difficulty, learning_style,
+        document_text=document_text,
+        document_name=document_name,
+        document_image_b64=document_image_b64,
+        document_image_mime=document_image_mime,
+    )    
     
 @chat_bp.route("/chat/<chat_id>", methods=["DELETE"])
 def delete_chat(chat_id):
