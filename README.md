@@ -14,7 +14,6 @@
   <img src="https://img.shields.io/badge/Flask-3.x-black?logo=flask&logoColor=white"/>
   <img src="https://img.shields.io/badge/LangChain-0.x-purple"/>
   <img src="https://img.shields.io/badge/OpenRouter-GPT--4o--mini-orange"/>
-  <img src="https://img.shields.io/badge/License-MIT-yellow"/>
 </p>
 
 ---
