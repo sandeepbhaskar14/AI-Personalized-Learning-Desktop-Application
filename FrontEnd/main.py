@@ -38,6 +38,10 @@ class MainWindow(QMainWindow) :
         QMainWindow.__init__(self)
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
+        
+        self.ui.btn_system_theme.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
+        self.ui.btn_light_theme.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
+        self.ui.btn_dark_theme.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
  
         # ── Hide the external StickyButton siblings ────────────────────────────
         # The new AutoGrowTextEdit has add_btn + search_btn built in at the
@@ -47,10 +51,6 @@ class MainWindow(QMainWindow) :
         self.ui.addButton_2.hide()
         self.ui.searchButton_2.hide()
         
-        icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap("Reqs/user.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.ui.login_button.setIcon(icon)
- 
         # ── Unlock conversation-page input frame ───────────────────────────────
         self.ui.frame_2.setMinimumHeight(120)
         self.ui.frame_2.setMaximumHeight(16777215)
@@ -71,6 +71,7 @@ class MainWindow(QMainWindow) :
  
         self.ui_functions = UIFunctions(self)
         self.ui_functions.uiDefinitions()
+        self.ui_functions.load_icons()
  
         # No document attached at startup
         self.attached_document = None
@@ -90,6 +91,7 @@ class MainWindow(QMainWindow) :
         self.ui.text_prompt_2.search_btn.clicked.connect(
             lambda: self._handle_search_or_stop()
         )
+        
  
         # ── Sidebar / navigation ───────────────────────────────────────────────
         self.ui.label_7.setVisible(False)
@@ -116,6 +118,12 @@ class MainWindow(QMainWindow) :
             lambda: self.ui_functions.setAboutPage())
         self.ui.acc_button.clicked.connect(
             lambda: self.ui_functions.setAccountPage())
+        self.ui.buttonUI.clicked.connect(
+            lambda: self.ui_functions.setUserInterfacePage())
+        self.ui.buttonNotification.clicked.connect(
+            lambda: self.ui_functions.setNotificationPage())
+        self.ui.buttonUpdate.clicked.connect(
+            lambda: self.ui_functions.setUpdatePage())
         self.ui.button_preferences.clicked.connect(
             lambda: self.ui_functions.setPreferencesPage())
         self.ui.button_logout.clicked.connect(

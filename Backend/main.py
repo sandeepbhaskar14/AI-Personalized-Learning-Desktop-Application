@@ -103,5 +103,5 @@ def get_preferences():
 if __name__ == "__main__":
     print(colored('Total threads: {}'.format(threading.active_count()), 'magenta'))
     
-    app.run(debug=True, use_reloader=True)
+    app.run(debug=True, use_reloader=False)
 

@@ -452,6 +452,18 @@ def after_verify_token(self, response):
         self.ui.username_label.setText(f"Username: {username}")
         self.ui.email_label.setText(f"Email: {email}")
         self.ui.button_logout.setText('Log Out')
+        self.ui.button_logout.setStyleSheet("""
+                                    QPushButton{
+                                        color: rgb(190, 42, 42);
+                                        border: 2px solid rgb(190, 42, 42);
+                                        background-color: rgba(70, 49, 60, 80);
+                                        border-radius : 10px;
+                                    }
+
+                                    QPushButton:hover{
+                                        background-color: rgba(70, 49, 60, 40);
+                                        border: 2px solid rgba(190, 42, 42, 170);
+}""")
         self.ui.button_save.setEnabled(True)
         self.update_user_preferences()
         load_chat_history(self)

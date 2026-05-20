@@ -31,6 +31,18 @@ class LogOutService:
         self.window.ui.username_label.setText("Username: ")
         self.window.ui.email_label.setText("Email: ")
         self.window.ui.button_logout.setText('Log In')
+        self.window.ui.button_logout.setStyleSheet("""
+                                                QPushButton{
+                                                    color: rgba(1, 190, 118, 200); 
+                                                    border: 2px solid rgba(1, 190, 118, 200);
+                                                    background-color: rgba(0, 170, 127, 20);
+                                                    border-radius : 10px;
+                                                }
+
+                                                QPushButton:hover{
+                                                    background-color: rgba(0, 170, 127, 10);
+                                                    border: 2px solid rgba(1, 190, 118, 170);
+}""")
 
         print(colored(f"LOGGED OUT User: {username.split()[1]}", 'green'))
         
