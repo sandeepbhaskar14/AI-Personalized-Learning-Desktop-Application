@@ -6958,6 +6958,9 @@ QPushButton:hover{
                         <height>16777215</height>
                        </size>
                       </property>
+                      <property name="styleSheet">
+                       <string notr="true">background-color: rgb(50, 56, 68);</string>
+                      </property>
                       <property name="frameShape">
                        <enum>QFrame::StyledPanel</enum>
                       </property>
@@ -7027,7 +7030,7 @@ QPushButton:hover{
                            <number>0</number>
                           </property>
                           <property name="topMargin">
-                           <number>0</number>
+                           <number>50</number>
                           </property>
                           <property name="rightMargin">
                            <number>0</number>
@@ -7079,6 +7082,9 @@ QPushButton:hover{
                           </property>
                           <item>
                            <widget class="QFrame" name="frame_59">
+                            <property name="styleSheet">
+                             <string notr="true">background-color: rgb(50, 56, 68);</string>
+                            </property>
                             <property name="frameShape">
                              <enum>QFrame::StyledPanel</enum>
                             </property>
@@ -7094,6 +7100,9 @@ QPushButton:hover{
                               <width>700</width>
                               <height>0</height>
                              </size>
+                            </property>
+                            <property name="styleSheet">
+                             <string notr="true">background-color: rgb(50, 56, 68);</string>
                             </property>
                             <property name="frameShape">
                              <enum>QFrame::StyledPanel</enum>
@@ -7315,6 +7324,9 @@ QPushButton:hover{
                           </item>
                           <item>
                            <widget class="QFrame" name="frame_61">
+                            <property name="styleSheet">
+                             <string notr="true">background-color: rgb(50, 56, 68);</string>
+                            </property>
                             <property name="frameShape">
                              <enum>QFrame::StyledPanel</enum>
                             </property>
@@ -7342,6 +7354,9 @@ QPushButton:hover{
                         <width>400</width>
                         <height>16777215</height>
                        </size>
+                      </property>
+                      <property name="styleSheet">
+                       <string notr="true">background-color: rgb(50, 56, 68);</string>
                       </property>
                       <property name="frameShape">
                        <enum>QFrame::StyledPanel</enum>
