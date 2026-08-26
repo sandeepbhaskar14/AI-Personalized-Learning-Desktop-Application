@@ -1,131 +1,341 @@
-from PyQt5.QtWidgets import (QWidget, QHBoxLayout, QVBoxLayout,
-                              QFrame, QSizePolicy, QTextBrowser,
-                              QScrollArea, QLabel)
+from PyQt5.QtWidgets import (
+    QWidget,
+    QHBoxLayout,
+    QVBoxLayout,
+    QFrame,
+    QSizePolicy,
+    QTextBrowser,
+    QScrollArea
+)
+
 from PyQt5.QtCore import Qt, QTimer
-from PyQt5.QtGui import QFont, QTextDocument, QPixmap, QPainter, QPainterPath
+
+from PyQt5.QtGui import (
+    QFont,
+    QFontMetrics,
+    QTextDocument,
+    QTextTable,
+    QPainter,
+    QPainterPath,
+    QColor,
+    QPen
+)
+
 import markdown
-from markdown.extensions.codehilite import CodeHiliteExtension
 from markdown.extensions.fenced_code import FencedCodeExtension
-import os
+import re
+
+# We use Pygments directly instead of CodeHiliteExtension
+# because Qt's HTML renderer can't handle CSS classes properly
+try:
+    from pygments import highlight
+    from pygments.lexers import get_lexer_by_name, guess_lexer, TextLexer
+    from pygments.formatters import HtmlFormatter
+    from pygments.util import ClassNotFound
+    PYGMENTS_OK = True
+except ImportError:
+    PYGMENTS_OK = False
+
+# Fenced code block pattern  ─────────────────────────────────────────────
+# Matches ```lang\n code \n``` including triple backticks with optional lang
+_FENCE_RE = re.compile(
+    r'```(\w*)\n(.*?)```',
+    re.DOTALL
+)
+
+# ── Inline-style formatter ─────────────────────────────────────────────
+if PYGMENTS_OK:
+    _FORMATTER = HtmlFormatter(
+        style='monokai',
+        noclasses=True,   # inline style= attributes — Qt renders these
+        nowrap=False,     # let Pygments emit its own <div><pre>...</pre></div>
+    )
 
 
-PYGMENTS_CSS = """
-<style>
-* { box-sizing: border-box; }
-body {
-    color: rgba(255,255,255,220);
-    font-family: 'Roboto', sans-serif;
-    font-size: 10pt;
-    margin: 0; padding: 0;
-    background: transparent;
-}
-p { margin: 0 0 6px 0; line-height: 1.45; }
-p:last-child { margin-bottom: 0; }
-h1,h2,h3,h4 { color: rgba(255,255,255,230); margin: 8px 0 3px 0; line-height: 1.3; }
-ul,ol { margin: 2px 0 6px 0; padding-left: 20px; }
-li { margin: 1px 0; line-height: 1.45; }
-strong { color: white; }
-em { color: rgba(255,255,255,180); }
-p code, li code {
-    font-family: 'Consolas', monospace; font-size: 9.5pt;
-    background-color: #1e1e2e; color: #e8e8e8;
-    padding: 1px 5px; border-radius: 3px;
-}
-.codehilite {
-    display: block; background-color: #0d1117 !important;
-    border-left: 3px solid #4a9eff; border-radius: 8px;
-    padding: 0; margin: 6px 0;
-}
-.codehilite pre {
-    display: block; background-color: #0d1117 !important;
-    color: #d4d4d4; font-family: 'Consolas', 'Courier New', monospace;
-    font-size: 9.5pt; margin: 0; padding: 12px 14px;
-    white-space: pre-wrap; word-wrap: break-word; border-radius: 8px;
-}
-.codehilite .c,.codehilite .c1,.codehilite .cm,
-.codehilite .cp,.codehilite .cs { color: #6a9955; }
-.codehilite .k,.codehilite .kc,.codehilite .kd,
-.codehilite .kn,.codehilite .kp,.codehilite .kr { color: #569cd6; }
-.codehilite .kt  { color: #4ec9b0; }
-.codehilite .m,.codehilite .mb,.codehilite .mf,
-.codehilite .mh,.codehilite .mi,.codehilite .mo { color: #b5cea8; }
-.codehilite .s,.codehilite .s1,.codehilite .s2,
-.codehilite .sa,.codehilite .sb,.codehilite .sc,
-.codehilite .dl,.codehilite .sh,.codehilite .si,
-.codehilite .sx { color: #ce9178; }
-.codehilite .sd { color: #6a9955; }
-.codehilite .se { color: #d7ba7d; }
-.codehilite .sr { color: #d16969; }
-.codehilite .na { color: #9cdcfe; }
-.codehilite .nb { color: #4ec9b0; }
-.codehilite .nc { color: #4ec9b0; }
-.codehilite .nd { color: #dcdcaa; }
-.codehilite .ne { color: #f44747; }
-.codehilite .nf { color: #dcdcaa; }
-.codehilite .n,.codehilite .ni,.codehilite .nl,
-.codehilite .nv { color: #9cdcfe; }
-.codehilite .nn { color: #4ec9b0; }
-.codehilite .nt { color: #569cd6; }
-.codehilite .o,.codehilite .ow { color: #569cd6; }
-.codehilite .p,.codehilite .w { color: #d4d4d4; }
-</style>
-"""
+class CodeTextBrowser(QTextBrowser):
+    """QTextBrowser with rounded code-block backgrounds."""
 
+    CODE_BG = QColor("#303541")
+    CODE_BORDER = QColor("#454d5c")
+    CODE_RADIUS = 10
+
+    CODE_LEFT_MARGIN = 0
+    CODE_RIGHT_MARGIN = 50
+
+    def paintEvent(self, event):
+        document = self.document()
+        layout = document.documentLayout()
+        root = document.rootFrame()
+
+        scroll_x = self.horizontalScrollBar().value()
+        scroll_y = self.verticalScrollBar().value()
+
+        code_rects = []
+
+        # ---------------------------------------------------------
+        # Find code tables
+        # ---------------------------------------------------------
+
+        for frame in root.childFrames():
+            if not isinstance(frame, QTextTable):
+                continue
+
+            rect = layout.frameBoundingRect(frame)
+
+            # Convert document coordinates → viewport coordinates
+            x = rect.x() - scroll_x
+            y = rect.y() - scroll_y
+            w = rect.width()
+            h = rect.height()
+
+            # Add margins
+            x += self.CODE_LEFT_MARGIN
+            w -= (
+                self.CODE_LEFT_MARGIN
+                + self.CODE_RIGHT_MARGIN
+            )
+
+            # Small vertical correction
+            y += 1
+            h -= 2
+            if w <= 20 or h <= 5:
+                continue
+            if y + h < 0:
+                continue
+            if y > self.viewport().height():
+                continue
+            code_rects.append(
+                (x, y, w, h)
+            )
+
+        # ---------------------------------------------------------
+        # Paint rounded backgrounds FIRST
+        # ---------------------------------------------------------
+
+        painter = QPainter(
+            self.viewport()
+        )
+        painter.setRenderHint(
+            QPainter.Antialiasing,
+            True
+        )
+        for x, y, w, h in code_rects:
+            path = QPainterPath()
+            path.addRoundedRect(
+                x,
+                y,
+                w,
+                h,
+                self.CODE_RADIUS,
+                self.CODE_RADIUS
+            )
+            painter.fillPath(
+                path,
+                self.CODE_BG
+            )
+        painter.end()
+
+        # ---------------------------------------------------------
+        # Let QTextBrowser paint the code/text
+        # ---------------------------------------------------------
+
+        super().paintEvent(event)
+
+        # ---------------------------------------------------------
+        # Paint rounded borders AFTER text
+        # ---------------------------------------------------------
+
+        painter = QPainter(
+            self.viewport()
+        )
+        painter.setRenderHint(
+            QPainter.Antialiasing,
+            True
+        )
+        painter.setPen(
+            QPen(
+                self.CODE_BORDER,
+                1
+            )
+        )
+        painter.setBrush(
+            Qt.NoBrush
+        )
+        for x, y, w, h in code_rects:
+            path = QPainterPath()
+            path.addRoundedRect(
+                x,
+                y,
+                w,
+                h,
+                self.CODE_RADIUS,
+                self.CODE_RADIUS
+            )
+
+            painter.drawPath(
+                path
+            )
+
+        painter.end()
+        
+
+def _highlight_code(code, lang):
+    """Return a dark, syntax-highlighted code block."""
+
+    if not PYGMENTS_OK:
+        escaped = (code.replace("&", "&amp;")
+                       .replace("<", "&lt;")
+                       .replace(">", "&gt;"))
+
+        return (
+            '<table cellspacing="0" cellpadding="0" width="96%" '
+            'style="background:transparent; border:none; margin:10px 0;">'
+            '<tr><td style="padding:14px 16px; background:transparent;">'
+            '<pre style="margin:0; padding:0; '
+            'font-family:Consolas,\'Courier New\',monospace; '
+            'font-size:9.5pt; line-height:1.6; '
+            'white-space:pre-wrap; '
+            'color:#e6edf3; '
+            'background:transparent;">'
+            f'{escaped}'
+            '</pre>'
+            '</td></tr></table>'
+        )
+
+    try:
+        lexer = get_lexer_by_name(lang, stripall=True)
+    except ClassNotFound:
+        try:
+            lexer = guess_lexer(code)
+        except ClassNotFound:
+            lexer = TextLexer()
+
+    raw_html = highlight(code, lexer, _FORMATTER)
+
+    # Remove Pygments wrapper
+    inner = re.sub(
+        r'^<div[^>]*>(.*)</div>\s*$',
+        r'\1',
+        raw_html,
+        flags=re.DOTALL
+    )
+
+    # Make the code text fit our design
+    inner = re.sub(
+        r'<pre[^>]*>',
+        '<pre style="'
+        'margin-left:20;'
+        'padding:0;'
+        'font-family:Consolas,\'Courier New\',monospace;'
+        'font-size:10pt;'
+        'line-height:1.2;'
+        'white-space:pre-wrap;'
+        'word-wrap:break-word;'
+        'background:transparent;'
+        'color:#e6edf3;'
+        '">',
+        inner
+    )
+
+    return (
+        '<table cellspacing="0" cellpadding="0" width="100%" '
+        'style="background:transparent; '
+        'border:none; '
+        'margin:0px 0;">'
+        '<tr>'
+        '<td style="padding:10px 10px; background:transparent;">'
+        f'{inner}'
+        '</td>'
+        '</tr>'
+        '</table>'
+    )
 
 def build_html(text):
-    body = markdown.markdown(
-        text,
-        extensions=[
-            FencedCodeExtension(),
-            CodeHiliteExtension(
-                guess_lang=True,
-                noclasses=False,
-                linenums=False,
-                pygments_style='default'
-            ),
-            'tables',
-        ]
-    )
-    return PYGMENTS_CSS + body
+    """
+    Convert markdown to HTML with proper Pygments syntax highlighting.
+    Fenced code blocks are extracted, highlighted with inline styles,
+    then reinserted so Qt's limited HTML renderer handles them correctly.
+    """
+    placeholders = {}
 
+    def sub_fence(m):
+        lang = m.group(1).strip() or 'text'
+        code = m.group(2)
+        key  = f'CODEBLOCK{len(placeholders)}END'
+        placeholders[key] = _highlight_code(code, lang)
+        return f'\n\n`{key}`\n\n'
+
+    text_with_placeholders = _FENCE_RE.sub(sub_fence, text)
+
+    body = markdown.markdown(
+        text_with_placeholders,
+        extensions=['tables']
+    )
+
+    # Restore highlighted blocks — markdown wraps our key in <p><code>KEY</code></p>
+    for key, html in placeholders.items():
+        body = body.replace(f'<p><code>{key}</code></p>', html)
+        body = body.replace(f'`{key}`', html)
+
+    base_css = """
+    <style>
+    * { box-sizing: border-box; }
+    body {
+        color: rgba(255,255,255,220);
+        font-family: 'Roboto', sans-serif;
+        font-size: 10pt;
+        margin: 0; padding: 0;
+        background: transparent;
+    }
+    p { margin: 0 0 6px 0; line-height: 1.45; }
+    p:last-child { margin-bottom: 0; }
+    h1,h2,h3,h4 {
+        color: rgba(255,255,255,230);
+        margin: 8px 0 3px 0;
+        line-height: 1.3;
+    }
+    ul,ol { margin: 2px 0 6px 0; padding-left: 20px; }
+    li { margin: 1px 0; line-height: 1.45; }
+    strong { color: white; }
+    em { color: rgba(255,255,255,180); }
+    p code, li code {
+        font-family: 'Consolas', monospace;
+        font-size: 9.5pt;
+        background-color: rgba(110,118,129,0.2);
+        color: rgba(255,255,255,210);
+        padding: 1px 6px;
+        border-radius: 4px;
+        border: 1px solid rgba(110,118,129,0.3);
+    }
+    </style>
+    """
+
+    return base_css + body
 
 def _get_scroll_area_viewport_width(widget):
-    """Walk up the parent chain to find QScrollArea viewport width."""
     p = widget.parent()
     while p is not None:
         if isinstance(p, QScrollArea):
-            vw = p.viewport().width()
-            return max(vw - 10, 100)
+            return max(p.viewport().width() - 10, 100)
         p = p.parent()
     return None
 
 
-def _rounded_pixmap(pixmap: QPixmap, radius: int = 6) -> QPixmap:
-    result = QPixmap(pixmap.size())
-    result.fill(Qt.transparent)
-    painter = QPainter(result)
-    painter.setRenderHint(QPainter.Antialiasing)
-    path = QPainterPath()
-    path.addRoundedRect(0, 0, pixmap.width(), pixmap.height(), radius, radius)
-    painter.setClipPath(path)
-    painter.drawPixmap(0, 0, pixmap)
-    painter.end()
-    return result
-
-
 class ChatBubble(QWidget):
-    _FONT     = QFont("Roboto", 10)
-    _CHIP_H   = 56    # must match _AttachChip.CHIP_H in auto_grow_text_edit
-    _CHIP_GAP = 6     # gap between chip and text label inside bubble
+    _FONT    = QFont("Roboto", 10)
+    _MAX_W   = 550
+    _PADDING = 52
+    _CHIP_H  = 52    # height of attachment chip inside bubble
+    _CHIP_GAP = 6    # gap between chip and text
 
     def __init__(self, text="", is_user=False, available_width=800, attachment=None):
         super().__init__()
-        self._attachment   = attachment
-        self.is_user       = is_user
+        self.is_user          = is_user
         self._available_width = available_width
-        self._user_text    = text if is_user else ""
-        self._shown_once   = False
-        self._streaming    = False
+        self._user_text       = text if is_user else ""
+        self._attachment      = attachment
+        self._shown_once      = False
+        self._streaming       = False
 
         self._height_timer = QTimer(self)
         self._height_timer.setSingleShot(True)
@@ -139,12 +349,11 @@ class ChatBubble(QWidget):
         outer.setSpacing(0)
 
         self.bubble = QFrame()
-        self.bubble.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
         bubble_layout = QVBoxLayout(self.bubble)
         bubble_layout.setContentsMargins(12, 10, 12, 10)
         bubble_layout.setSpacing(self._CHIP_GAP)
 
-        self.label = QTextBrowser()
+        self.label = CodeTextBrowser()
         self.label.setOpenExternalLinks(True)
         self.label.setFrameShape(QTextBrowser.NoFrame)
         self.label.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
@@ -154,6 +363,7 @@ class ChatBubble(QWidget):
         self.label.document().setDocumentMargin(2)
 
         if is_user:
+            self.bubble.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Preferred)
             self.bubble.setStyleSheet(
                 "QFrame { background-color: #1a56a0; border-radius: 12px; }")
             self.label.setStyleSheet(
@@ -164,152 +374,103 @@ class ChatBubble(QWidget):
             spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
             outer.addWidget(spacer, 1)
             outer.addWidget(self.bubble, 0)
-            self.bubble.setMaximumWidth(550)
+            self.bubble.setMaximumWidth(self._MAX_W)
 
-            # ── Attachment chip (if any) ───────────────────────────────────────
-            if self._attachment:
-                chip_frame = self._build_attachment_chip(self._attachment)
-                bubble_layout.addWidget(chip_frame)
+            # ── Attachment chip inside the bubble (above text) ─────────
+            if attachment:
+                chip = self._build_chip(attachment)
+                bubble_layout.addWidget(chip)
 
             bubble_layout.addWidget(self.label)
 
             if text:
                 self.label.setPlainText(text)
-                self._set_user_height_with_width(text, available_width)
+                self._size_user_bubble(text, available_width, has_chip=bool(attachment))
 
         else:
+            self.bubble.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
             self.bubble.setStyleSheet(
-                "QFrame { background-color: #2d3240; border-radius: 12px; }")
+                "QFrame { background: transparent; border: none; }")
             self.label.setStyleSheet(
                 "QTextBrowser { color: rgba(255,255,255,220); "
                 "background: transparent; font-family: Roboto; "
                 "font-size: 10pt; border: none; }")
-            outer.addWidget(self.bubble, 1)
             bubble_layout.addWidget(self.label)
+            outer.addWidget(self.bubble, 1)
 
             if text:
                 self.label.setHtml(build_html(text))
                 QTimer.singleShot(0, self._do_adjust_height)
 
-    # ── Build chip widget for inside the user bubble ───────────────────────────
-    def _build_attachment_chip(self, attachment: dict) -> QFrame:
+    def _build_chip(self, attachment):
+        """Small file chip shown inside the user bubble above the text."""
+        import os
+        from PyQt5.QtWidgets import QLabel
+        from PyQt5.QtGui import QPixmap, QPainter, QPainterPath
+
         chip = QFrame()
         chip.setFixedHeight(self._CHIP_H)
+        chip.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         chip.setStyleSheet("""
             QFrame {
                 background-color: rgba(255,255,255,18);
-                border-radius: 10px;
+                border-radius: 8px;
                 border: none;
             }
         """)
         row = QHBoxLayout(chip)
-        row.setContentsMargins(8, 5, 10, 5)
+        row.setContentsMargins(8, 6, 10, 6)
         row.setSpacing(8)
 
-        # Thumbnail or ext badge
+        # Thumbnail or extension badge
         thumb = QLabel()
         thumb.setAlignment(Qt.AlignCenter)
         px = attachment.get("pixmap")
         if px and not px.isNull():
-            scaled = px.scaled(56, 42, Qt.KeepAspectRatio, Qt.SmoothTransformation)
-            thumb.setPixmap(_rounded_pixmap(scaled))
-            thumb.setFixedSize(56, 42)
+            scaled = px.scaled(40, 36, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            thumb.setPixmap(scaled)
+            thumb.setFixedSize(40, 36)
         else:
-            ext = (os.path.splitext(attachment["filename"])[1]
-                   .upper().lstrip('.') or "FILE")
+            ext = os.path.splitext(attachment["filename"])[1].upper().lstrip('.') or "FILE"
             thumb.setText(ext)
-            thumb.setFixedSize(40, 34)
+            thumb.setFixedSize(36, 30)
             thumb.setStyleSheet("""
                 background-color: rgba(255,255,255,22);
-                border-radius: 6px; color: white;
-                font-size: 9px; font-family: 'Roboto'; font-weight: bold;
+                border-radius: 5px;
+                color: white;
+                font-size: 8px;
+                font-family: 'Roboto';
+                font-weight: bold;
             """)
         row.addWidget(thumb)
 
-        # Name + type column
-        col = QVBoxLayout()
+        # Filename label
+        from PyQt5.QtWidgets import QVBoxLayout as _VL
+        col = _VL()
         col.setSpacing(1)
         col.setContentsMargins(0, 0, 0, 0)
 
-        fn = QLabel()
-        fn.setText(fn.fontMetrics().elidedText(
-            attachment["filename"], Qt.ElideMiddle, 190))
-        fn.setToolTip(attachment["filename"])
-        fn.setStyleSheet("""
-            color: rgba(255,255,255,210);
-            font-family: 'Roboto'; font-size: 9pt;
-            background: transparent; border: none;
-        """)
-        col.addWidget(fn)
+        fn_lbl = QLabel()
+        fn_lbl.setText(fn_lbl.fontMetrics().elidedText(
+            attachment["filename"], Qt.ElideMiddle, 180))
+        fn_lbl.setToolTip(attachment["filename"])
+        fn_lbl.setStyleSheet(
+            "color: rgba(255,255,255,210); font-family:'Roboto';"
+            "font-size:9pt; background:transparent; border:none;")
+        col.addWidget(fn_lbl)
 
         ext_str = os.path.splitext(attachment["filename"])[1].upper().lstrip('.')
         type_lbl = QLabel(f"{ext_str} file" if ext_str else "file")
-        type_lbl.setStyleSheet("""
-            color: rgba(255,255,255,90);
-            font-family: 'Roboto'; font-size: 8pt;
-            background: transparent; border: none;
-        """)
+        type_lbl.setStyleSheet(
+            "color: rgba(255,255,255,90); font-family:'Roboto';"
+            "font-size:8pt; background:transparent; border:none;")
         col.addWidget(type_lbl)
+
         row.addLayout(col)
         row.addStretch()
-
         return chip
-
-    # ── User bubble height calculation ─────────────────────────────────────────
-    def _set_user_height_with_width(self, text, container_width):
-        """
-        Pixel-perfect height using QTextDocument so word-wrap matches Qt exactly.
-        Accounts for attachment chip if present.
-
-        Padding layers (container_width → inner text width):
-          outer QHBoxLayout  left=10, right=10   → 20px
-          bubble QVBoxLayout left=12, right=12   → 24px
-          QTextBrowser doc margin  2+2           → 4px
-          safety buffer                          → 4px
-          Total horizontal padding               → 52px
-
-        Bubble vertical layout:
-          bubble VBox top=10, bottom=10          → 20px total
-          chip (if present): CHIP_H + CHIP_GAP  → 56 + 6 = 62px
-          label extra                            → 4px
-        """
-        MAX_BUBBLE      = 550
-        H_PAD           = 52    # left+right padding from container to inner text
-        BUBBLE_VPAD     = 20    # bubble top+bottom margins
-        LABEL_EXTRA     = 4
-
-        chip_height = (self._CHIP_H + self._CHIP_GAP) if self._attachment else 0
-
-        bubble_w = min(container_width, MAX_BUBBLE)
-        inner_w  = max(bubble_w - H_PAD, 60)
-
-        doc = QTextDocument()
-        doc.setDefaultFont(self._FONT)
-        doc.setPlainText(text)
-        doc.setTextWidth(inner_w)
-
-        doc_h    = int(doc.size().height())
-        label_h  = max(36, doc_h + LABEL_EXTRA)
-        bubble_h = chip_height + label_h + BUBBLE_VPAD
-
-        self.label.setFixedHeight(label_h)
-        self.bubble.setFixedHeight(bubble_h)
-        self.updateGeometry()
-
-    # ── showEvent: real geometry now available ─────────────────────────────────
-    def showEvent(self, event):
-        super().showEvent(event)
-        if self.is_user and self._user_text and not self._shown_once:
-            self._shown_once = True
-            vp_width = _get_scroll_area_viewport_width(self)
-            if vp_width and vp_width > 50:
-                self._set_user_height_with_width(self._user_text, vp_width)
-            else:
-                bw = self.bubble.width()
-                if bw > 20:
-                    self._set_user_height_with_width(self._user_text, bw + 52)
-
-    # ── Streaming ──────────────────────────────────────────────────────────────
+    
+     # ── Streaming ──────────────────────────────────────────────────────────────
     def start_stream(self):
         self._streaming = True
         self.label.setFixedHeight(36)
@@ -325,22 +486,58 @@ class ChatBubble(QWidget):
         self.label.setHtml(build_html(full_text))
         QTimer.singleShot(0, self._do_adjust_height)
 
-    # ── Height ────────────────────────────────────────────────────────────────
+    def _measure_text(self, text, max_inner_w):
+        doc = QTextDocument()
+        doc.setDefaultFont(self._FONT)
+        doc.setPlainText(text)
+        doc.setTextWidth(-1)
+        natural_w = int(doc.idealWidth()) + 1
+        if natural_w <= max_inner_w:
+            doc.setTextWidth(natural_w)
+        else:
+            natural_w = max_inner_w
+            doc.setTextWidth(max_inner_w)
+        return natural_w, int(doc.size().height())
+
+    def _size_user_bubble(self, text, container_width, has_chip=False):
+        max_bubble_w = min(container_width, self._MAX_W)
+        max_inner_w  = max(max_bubble_w - self._PADDING, 60)
+        natural_w, wrapped_h = self._measure_text(text, max_inner_w)
+
+        # If there's a chip, bubble must be at least wide enough for it
+        min_w = (200 + self._PADDING) if has_chip else 60
+        bubble_w = max(min(natural_w + self._PADDING, max_bubble_w), min_w)
+
+        chip_extra = (self._CHIP_H + self._CHIP_GAP) if has_chip else 0
+
+        self.bubble.setFixedWidth(bubble_w)
+        self.label.setFixedHeight(max(36, wrapped_h + 8))
+
+        # Set overall bubble frame height to include chip
+        total_h = chip_extra + max(36, wrapped_h + 8) + 20  # 20 = top+bottom padding
+        self.bubble.setFixedHeight(total_h)
+        self.updateGeometry()
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        if self.is_user and self._user_text and not self._shown_once:
+            self._shown_once = True
+            vp_w = _get_scroll_area_viewport_width(self)
+            if vp_w and vp_w > 50:
+                self._size_user_bubble(self._user_text, vp_w,
+                                       has_chip=bool(self._attachment))
+            else:
+                bw = self.bubble.width()
+                if bw > 20:
+                    self._size_user_bubble(self._user_text, bw + self._PADDING,
+                                           has_chip=bool(self._attachment))
+
     def _do_adjust_height(self):
         width = self.label.viewport().width()
         if width < 10:
             vp = _get_scroll_area_viewport_width(self)
             width = vp if vp else max(self._available_width - 60, 400)
-
         self.label.document().setTextWidth(width)
         doc_h = int(self.label.document().size().height())
         self.label.setFixedHeight(max(36, doc_h + 16))
         self.updateGeometry()
-
-    def adjust_height(self):
-        self._do_adjust_height()
-
-    def resizeEvent(self, event):
-        super().resizeEvent(event)
-        if not self._height_timer.isActive():
-            self._height_timer.start(150)

@@ -668,6 +668,7 @@ def send_prompt(self):
 
     self.ui.stackedWidget.setCurrentWidget(self.ui.conversation_page)
 
+    # Read from whichever input is active
     text = self.ui.text_prompt.toPlainText().strip()
     if not text:
         text = self.ui.text_prompt_2.toPlainText().strip()
@@ -681,6 +682,7 @@ def send_prompt(self):
 
     self._is_streaming = True
 
+    # Switch stop icon
     stop_icon = QtGui.QIcon()
     stop_icon.addPixmap(QtGui.QPixmap("Reqs/stop.png"),
                         QtGui.QIcon.Normal, QtGui.QIcon.Off)
@@ -690,23 +692,33 @@ def send_prompt(self):
     self.ui.text_prompt.search_btn.setIconSize(QSize(32, 32))
 
     if not getattr(self, 'current_chat_id', None):
+        import uuid
         self.current_chat_id = str(uuid.uuid4())
 
     chat_width = self.chat_area.width()
 
+    # ── Snapshot the attachment BEFORE clearing anything ───────────────
     doc = getattr(self, 'attached_document', None)
-    user_bubble = ChatBubble(text, is_user=True,
-                             available_width=chat_width, attachment=doc)
+
+    # ── User bubble — pass the attachment so chip renders inside bubble ─
+    user_bubble = ChatBubble(
+        text,
+        is_user=True,
+        available_width=chat_width,
+        attachment=doc          # <── chip shown inside the bubble
+    )
     self.chat_area.add_bubble(user_bubble)
 
+    # ── NOW clear the input chip (after bubble is created) ────────────
     for te in (self.ui.text_prompt, self.ui.text_prompt_2):
         te.set_attachment(None)
 
+    # ── AI bubble ──────────────────────────────────────────────────────
     self.ai_bubble = ChatBubble("", is_user=False, available_width=chat_width)
     self.ai_bubble.start_stream()
     self.chat_area.add_bubble(self.ai_bubble)
 
-    # ── Build payload ───────────────────────────────────────────────────────
+    # ── Build payload ──────────────────────────────────────────────────
     payload = {
         "prompt_text": text,
         "prompt_type": self.ui.preferred_output.currentText().lower(),
@@ -715,31 +727,27 @@ def send_prompt(self):
 
     if doc:
         payload["document_name"] = doc["filename"]
-
         if doc.get("is_image"):
-            # ── Vision: read the file, base64-encode, send to backend ──────
             img_path = doc.get("path", "")
             ext      = os.path.splitext(img_path)[1].lower()
             mime     = _MIME_TYPES.get(ext, "image/png")
-
             try:
                 with open(img_path, "rb") as img_file:
                     b64_data = base64.b64encode(img_file.read()).decode("utf-8")
                 payload["document_image_b64"]  = b64_data
                 payload["document_image_mime"] = mime
-                print(colored(
-                    f"Image encoded: {doc['filename']} "
-                    f"({len(b64_data) // 1024} KB base64)", "cyan"))
             except Exception as e:
                 print(colored(f"Failed to encode image: {e}", "red"))
-                # Fall back to a text note so the request still works
                 payload["document_text"] = (
                     f"[User attached an image '{doc['filename']}' "
                     "but it could not be read from disk.]"
                 )
         else:
-            # ── Document: send extracted text ──────────────────────────────
             payload["document_text"] = doc["text"]
+
+    # Clear the document state AFTER payload is built
+    self.attached_document = None
+    _set_attach_button_inactive(self)
 
     subprocess.run(["icacls", "auth_token.x", "/remove:d", "Everyone"], check=True)
     with open('auth_token.x', 'r', encoding='utf-8') as f:
